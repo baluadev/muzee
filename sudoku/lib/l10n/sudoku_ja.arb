@@ -1,0 +1,46 @@
+{
+  "appName": "数独クール",
+  "menuNewGame": "新規ゲーム",
+  "@menuNewGame": {
+    "description": "新規ゲームボタンのテキスト"
+  },
+  "menuContinueGame": "ゲームを続ける",
+  "@menuContinueGame": {
+    "description": "ゲームを続けるボタンのテキスト"
+  },
+  "menuAISolver": "数独スナップショット",
+  "levelCancel": "キャンセル",
+  "levelEasy": "簡単",
+  "levelMedium": "中級",
+  "levelHard": "困難です",
+  "levelExpert": "専門家です",
+
+  "sudokuGenerateText": "数独を読み込んでいます。少々お待ちください...",
+
+  "gameStatusInitialize": "初期化",
+  "gameStatusGaming": "進行中",
+  "gameStatusPause": "一時停止",
+  "gameStatusFailure": "失敗",
+  "gameStatusVictory": "勝利",
+
+  "wrongInputAlertText": "入力が間違っています\nあと %attempts% 回試行できます",
+  "gotItText": "了解しました",
+
+  "levelText": "難易度",
+  "tipsText": "ヒントです",
+  "enableMarkText": "草稿です",
+  "closeMarkText": "解答します",
+  "exitGameText": "退場します",
+  "exitGameContentText": "このラウンドの数独を終了しますか？",
+  "openText": "開く",
+  "cancelText": "キャンセル",
+  "pauseText": "一時停止です",
+  "markText": "メモ",
+  "pauseGameText": "ゲームが一時停止しています",
+  "elapsedTimeText": "経過時間",
+  "continueGameContentText": "画面をダブルタップしてゲームを再開します",
+  "winnerConclusionText": "おめでとうございます！[%level%]の数独チャレンジをクリアしました！",
+  "failureConclusionText": "残念ながら、[%level%]の数独でエラー回数が多すぎました。チャレンジに失敗しました！",
+
+  "aiSolverLensScanTipsText": "カメラを使用して数独を撮影して認識します"
+}

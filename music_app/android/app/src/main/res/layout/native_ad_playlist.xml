@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/native_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="0dp">
+
+    <!-- Label "Ad" ở góc trên bên phải -->
+    <TextView
+        android:id="@+id/ad_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ad"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:layout_gravity="end"
+        android:layout_margin="4dp" />
+
+    <LinearLayout
+        android:id="@+id/ad_container"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <!-- MediaView: hỗ trợ video hoặc ảnh -->
+        <com.google.android.gms.ads.nativead.MediaView
+            android:id="@+id/ad_media"
+            android:layout_width="match_parent"
+            android:layout_height="145dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/ad_badge_bg"
+            android:scaleType="centerCrop" />
+
+        <!-- Tiêu đề -->
+        <TextView
+            android:id="@+id/ad_headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginBottom="2dp" />
+
+        <!-- Mô tả -->
+        <TextView
+            android:id="@+id/ad_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#80FFFFFF"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+    </LinearLayout>
+</com.google.android.gms.ads.nativead.NativeAdView>

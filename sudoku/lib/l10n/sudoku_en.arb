@@ -1,0 +1,45 @@
+{
+  "appName": "Sudoku",
+  "menuNewGame":"New Game",
+  "@menuNewGame":{
+    "description":"menu of 'new game' button text"
+  },
+  "menuContinueGame": "Continue Game",
+  "@menuContinueGame":{
+    "description":"menu of 'continue game' button text"
+  },
+  "menuAISolver" : "Sudoku Lens",
+  "levelCancel": "Cancel",
+  "levelEasy": "Easy",
+  "levelMedium": "Medium",
+  "levelHard": "Hard",
+  "levelExpert": "Expert",
+  "sudokuGenerateText": "Generating your Sudoku...",
+
+  "gameStatusInitialize" : "Initialize",
+  "gameStatusGaming" : "Gaming",
+  "gameStatusPause" : "Pause",
+  "gameStatusFailure" : "Failure",
+  "gameStatusVictory" : "Victory",
+
+  "wrongInputAlertText" : "Wrong Input\nYou can't afford %attempts% more turnovers",
+  "gotItText" : "Got It",
+
+  "levelText" : "Level",
+  "tipsText" : "Use Tips",
+  "enableMarkText" : "Enable Note",
+  "closeMarkText" : "Close Note",
+  "exitGameText" : "Exit Game",
+  "exitGameContentText": "Would you like to end this Sudoku round ?",
+  "openText" : "Open",
+  "cancelText" : "Cancel",
+  "pauseText" : "Pause Game",
+  "markText" : "Mark",
+  "pauseGameText" : "Paused",
+  "elapsedTimeText" : "elapsed time",
+  "continueGameContentText" : "Double click the screen to continue playing",
+  "winnerConclusionText" : "Congratulations on completing the [%level%] Sudoku challenge!",
+  "failureConclusionText": "This round of Sudoku [%level%] had too many errors. Challenge failed!",
+
+  "aiSolverLensScanTipsText": "take pictures to solve puzzle"
+}

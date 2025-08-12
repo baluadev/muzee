@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "711681429122",
+    "project_id": "muzee-6dc1d",
+    "storage_bucket": "muzee-6dc1d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711681429122:android:3105d0ba7d14f45293ee9b",
+        "android_client_info": {
+          "package_name": "up.nexstudio.muzee"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "711681429122-iile6uobkurogq04v3832mm6imvb8ce2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEcuIEGeLKzeiT3cAnYeO2wwY6O2QoADM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "711681429122-iile6uobkurogq04v3832mm6imvb8ce2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      },
+      "admob_app_id": "ca-app-pub-8681872943360035~2945133002"
+    }
+  ],
+  "configuration_version": "1"
+}

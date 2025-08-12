@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/native_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="0dp"
+    android:orientation="vertical">
+
+    <!-- Wrapper dùng FrameLayout để đè nhãn Ad lên -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Nội dung chính -->
+        <LinearLayout
+            android:id="@+id/ad_main_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingEnd="24dp"  
+            android:gravity="center_vertical">
+
+            <!-- App Icon -->
+            <ImageView
+                android:id="@+id/ad_app_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/ad_icon_rounded_bg"
+                android:clipToOutline="true"
+                android:scaleType="centerCrop"
+                android:contentDescription="Ad icon" />
+
+            <!-- Text content -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/ad_headline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:fontFamily="inter-medium" />
+
+                <TextView
+                    android:id="@+id/ad_body"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Label "Ad" đặt chồng bên trên, tránh icon (!) -->
+        <TextView
+            android:id="@+id/ad_attribution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sponsored"
+            android:textColor="#999999"
+            android:textSize="12sp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="1dp"
+            android:layout_marginEnd="28dp" /> <!-- cách xa icon (!) -->
+    </FrameLayout>
+</com.google.android.gms.ads.nativead.NativeAdView>

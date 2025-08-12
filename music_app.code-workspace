@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "music_app"
+		},
+		{
+			"path": "flutter_2048"
+		},
+		{
+			"path": "sudoku"
+		}
+	],
+	"settings": {}
+}

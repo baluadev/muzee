@@ -1,0 +1,85 @@
+name: sudoku
+description: an new Sudoku Flutter application.
+homepage: https://github.com/einsitang/sudoku-flutter
+version: 2.4.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '^3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  intl: '^0.18.1'
+  sudoku_dart: '^1.2.0'
+  logger: "^2.4.0"
+  sprintf: "^7.0.0"
+  scoped_model: "^2.0.0"
+  modal_bottom_sheet: "^3.0.0"
+  hive: "^2.2.3"
+  hive_flutter: "^1.1.0"
+  cupertino_icons: ^1.0.5
+  url_launcher: ^6.1.7
+  just_audio: ^0.9.39
+  camera_android_camerax: 0.6.5
+  camera: 0.11.0+1
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  image: ^4.2.0
+  yaml: ^3.1.2
+  tflite_flutter: ^0.11.0
+  opencv_dart: 1.2.3
+
+  ffi: ^2.1.3
+  flutter_animate: ^4.5.2
+  flutter_svg: ^2.0.10+1
+  simple_shadow: ^0.3.1
+
+  flutter_remix: 0.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  hive_generator: ^2.0.0
+  build_runner: ^2.4.3
+  ffigen: ^14.0.1
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/image/
+    - assets/svg/
+    - assets/audio/
+    - assets/audio/speak/
+    - assets/tf_model/sudoku/
+    - assets/tf_model/digits/
+    - assets/fonts/
+  fonts:
+     - family: montserrat
+       fonts:
+         - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
+     - family: handwriting_digits
+       fonts:
+         - asset: assets/fonts/handwriting_digits.ttf
+  plugin:
+    platforms:
+      android:
+        package: up.nexstudio.muzee.sudoku
+        pluginClass: SudokuPlugin
+      ios:
+        pluginClass: SudokuPlugin
+ffigen:
+  # 生成文件的路径
+  output: lib/native/nativefl.dart
+  # 生成文件的 class name
+  name: Nativefl
+  # 生成的描述
+  description: Native bindings for nativefl
+  headers:
+    entry-points:
+      # 头文件，根据库文件会生成具体的方法
+      - src/libsudoku.h

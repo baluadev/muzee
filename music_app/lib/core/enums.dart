@@ -1,0 +1,1 @@
+enum TimerAction { origin, isPlaying, pause }
