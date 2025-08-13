@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_2048/main_2048.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:muzee/blocs/app/app_cubit.dart';
 import 'package:muzee/components/custom_appbar.dart';
 import 'package:muzee/gen/colors.gen.dart';
 import 'package:muzee/packages/bottom_nav_bar/persistent_bottom_nav_bar_v2.dart';
+import 'package:muzee/services/admob/interstitial_admanager.dart';
 import 'package:muzee/services/admob/native_admanager.dart';
 import 'package:sudoku/sudoku_entry.dart';
 
@@ -41,74 +44,87 @@ class _GameCenterState extends State<GameCenter> {
 
   @override
   Widget build(BuildContext context) {
+    final bannerAds = context.read<AppCubit>().bannerWidget;
     return Scaffold(
       appBar: const CustomAppBar(hasBack: false, title: 'Game Center'),
       body: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: List.generate(games.length, (index) {
-            final item = games.elementAt(index);
-            Widget screen = item.screen;
-            return GestureDetector(
-              onTap: () async {
-                if (item.title == '2048') {
-                  await initGame2048();
-                } else if (item.title == 'Sudoku') {
-                  final state = await loadSudokuState();
-                  screen = buildSudokuApp(state: state);
-                }
-                // ignore: use_build_context_synchronously
-                pushScreenWithNavBar(context, screen);
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withOpacity(0.1),
-                      Colors.black.withOpacity(0.12)
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ...games.map((item) {
+              Widget screen = item.screen;
+              return GestureDetector(
+                onTap: () async {
+                  if (item.title == '2048') {
+                    await initGame2048();
+                  } else if (item.title == 'Sudoku') {
+                    final state = await loadSudokuState();
+                    screen = buildSudokuApp(
+                      state: state,
+                      bannerAds: bannerAds,
+                      nativedAds: const NativeAdManager(
+                        templateType: TemplateType.small,
+                      ),
+                      showAds: () {
+                        InterstitialAdManager.inst.showAd();
+                      }
+                    );
+                  }
+                  // ignore: use_build_context_synchronously
+                  pushScreenWithNavBar(context, screen);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.black.withOpacity(0.12)
+                      ],
+                    ),
+                  ),
+                  height: 100,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            bottomLeft: Radius.circular(8),
+                          ),
+                          color: item.color,
+                        ),
+                        child: Image.asset(item.logo, color: MyColors.white),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.title,
+                                  style: Theme.of(context).textTheme.bodyLarge),
+                              const SizedBox(height: 8),
+                              Text(item.subtitle,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                height: 100,
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8),
-                          bottomLeft: Radius.circular(8),
-                        ),
-                        color: item.color,
-                      ),
-                      child: Image.asset(item.logo, color: MyColors.white),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.title,
-                                style: Theme.of(context).textTheme.bodyLarge),
-                            const SizedBox(height: 8),
-                            Text(item.subtitle,
-                                style: Theme.of(context).textTheme.titleMedium),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+              );
+            }),
+            bannerAds,
+          ],
         ),
       ),
     );
