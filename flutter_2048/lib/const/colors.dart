@@ -1,25 +1,26 @@
 import 'dart:ui';
 
-const backgroundColor = Color(0xfffaf8ef);
-const textColor = Color(0xff776e65);
-const textColorWhite = Color(0xfff9f6f2);
-const boardColor = Color(0xffbbada0);
-const emptyTileColor = Color(0xffcdc1b4);
-const buttonColor = Color(0xff8f7a66);
-const scoreColor = Color(0xffbbada0);
-const overlayColor = Color.fromRGBO(238, 228, 218, 0.73);
+const backgroundColor = Color(0xff0d0c1d); // Nền chính
+const textColor = Color(0xffe0dfe4); // Màu chữ số mặc định (ô tối)
+const textColorWhite = Color(0xffffffff); // Màu chữ số sáng (ô màu đậm)
+const boardColor = Color(0xff1a182e); // Nền bảng
+const emptyTileColor = Color(0xff2b2844); // Ô trống
+const buttonColor = Color(0xff2b2844); // Nút
+const scoreColor = Color(0xff2b2844); // Nền bảng điểm
+const overlayColor = Color.fromRGBO(13, 12, 29, 0.73); // Overlay khi game over
 
-const color2 = Color(0xffeee4da);
-const color4 = Color(0xffeee1c9);
-const color8 = Color(0xfff3b27a);
-const color16 = Color(0xfff69664);
-const color32 = Color(0xfff77c5f);
-const color64 = Color(0xfff75f3b);
-const color128 = Color(0xffedd073);
-const color256 = Color(0xffedcc62);
-const color512 = Color(0xffedc950);
-const color1024 = Color(0xffedc53f);
-const color2048 = Color(0xffedc22e);
+// Tile colors
+const color2 = Color(0xff3e3a5c);
+const color4 = Color(0xffbcb59f);
+const color8 = Color(0xfff08b65);
+const color16 = Color(0xffff6f57);
+const color32 = Color(0xffff4e3c);
+const color64 = Color(0xffd9412e);
+const color128 = Color(0xfff4c868);
+const color256 = Color(0xffe6bb54);
+const color512 = Color(0xffd8ad3e);
+const color1024 = Color(0xffcfa62f);
+const color2048 = Color(0xffc49b21);
 
 const tileColors = {
   2: color2,

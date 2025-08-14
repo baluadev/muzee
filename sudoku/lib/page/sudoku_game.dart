@@ -42,8 +42,10 @@ final ButtonStyle primaryFlatButtonStyle = TextButton.styleFrom(
 
 const ideaAssetImage = AssetImage("packages/sudoku/assets/image/icon_idea.png");
 const lifeAssetImage = AssetImage("packages/sudoku/assets/image/icon_life.png");
-const logoAssetImage = AssetImage("packages/sudoku/assets/image/sudoku_logo.png");
-const eraserAssetImage = AssetImage("packages/sudoku/assets/image/icon_eraser.png");
+const logoAssetImage =
+    AssetImage("packages/sudoku/assets/image/sudoku_logo.png");
+const eraserAssetImage =
+    AssetImage("packages/sudoku/assets/image/icon_eraser.png");
 
 const Image ideaPng = Image(
   image: ideaAssetImage,
@@ -96,7 +98,14 @@ final exitToAppAssetSvg = SvgPicture.asset(
 );
 
 class SudokuGamePage extends StatefulWidget {
-  SudokuGamePage({Key? key, required this.title}) : super(key: key);
+  final Widget? nativedAds;
+  final VoidCallback? showAds;
+  SudokuGamePage({
+    Key? key,
+    required this.title,
+    this.nativedAds,
+    this.showAds,
+  }) : super(key: key);
   final String title;
 
   @override
@@ -118,73 +127,73 @@ class _SudokuGamePageState extends State<SudokuGamePage>
 
   SudokuState get _state => ScopedModel.of<SudokuState>(context);
 
-  _aboutDialogAction(BuildContext context) {
-    Widget appIcon = GestureDetector(
-        child: Image(image: logoAssetImage, width: 45, height: 45),
-        onDoubleTap: () {
-          WidgetBuilder columnWidget = (BuildContext context) {
-            return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Image(image: logoAssetImage),
-                  CupertinoButton(
-                    child: Text(
-                      SudokuLocalizations.of(context).appName,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context, false);
-                    },
-                  )
-                ]);
-          };
-          showDialog(context: context, builder: columnWidget);
-        });
-    return showAboutDialog(
-        applicationIcon: appIcon,
-        applicationName: SudokuLocalizations.of(context).appName,
-        context: context,
-        children: <Widget>[
-          GestureDetector(
-            child: Text(
-              "Github Repository",
-              style: TextStyle(color: Colors.blue),
-            ),
-            onTap: () async {
-              if (await canLaunchUrlString(Constant.githubRepository)) {
-                if (Platform.isAndroid) {
-                  await launchUrlString(
-                    Constant.githubRepository,
-                    mode: LaunchMode.externalApplication,
-                    browserConfiguration: BrowserConfiguration(showTitle: true),
-                    webOnlyWindowName: "Sudoku-Flutter Github Repository",
-                  );
-                } else {
-                  await launchUrlString(Constant.githubRepository,
-                      mode: LaunchMode.externalApplication);
-                }
-              } else {
-                log.e(
-                    "can't open browser to url : ${Constant.githubRepository}");
-              }
-            },
-          ),
-          Container(
-              margin: EdgeInsets.fromLTRB(0, 10, 0, 5),
-              padding: EdgeInsets.all(0),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Sudoku powered by Flutter",
-                        style: TextStyle(fontSize: 12)),
-                    Text(Constant.githubRepository,
-                        style: TextStyle(fontSize: 12))
-                  ]))
-        ]);
-  }
+  // _aboutDialogAction(BuildContext context) {
+  //   Widget appIcon = GestureDetector(
+  //       child: Image(image: logoAssetImage, width: 45, height: 45),
+  //       onDoubleTap: () {
+  //         WidgetBuilder columnWidget = (BuildContext context) {
+  //           return Column(
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: <Widget>[
+  //                 Image(image: logoAssetImage),
+  //                 CupertinoButton(
+  //                   child: Text(
+  //                     SudokuLocalizations.of(context).appName,
+  //                     style: TextStyle(
+  //                       fontSize: 20,
+  //                       color: Colors.white,
+  //                     ),
+  //                   ),
+  //                   onPressed: () {
+  //                     Navigator.pop(context, false);
+  //                   },
+  //                 )
+  //               ]);
+  //         };
+  //         showDialog(context: context, builder: columnWidget);
+  //       });
+  //   return showAboutDialog(
+  //       applicationIcon: appIcon,
+  //       applicationName: SudokuLocalizations.of(context).appName,
+  //       context: context,
+  //       children: <Widget>[
+  //         GestureDetector(
+  //           child: Text(
+  //             "Github Repository",
+  //             style: TextStyle(color: Colors.blue),
+  //           ),
+  //           onTap: () async {
+  //             if (await canLaunchUrlString(Constant.githubRepository)) {
+  //               if (Platform.isAndroid) {
+  //                 await launchUrlString(
+  //                   Constant.githubRepository,
+  //                   mode: LaunchMode.externalApplication,
+  //                   browserConfiguration: BrowserConfiguration(showTitle: true),
+  //                   webOnlyWindowName: "Sudoku-Flutter Github Repository",
+  //                 );
+  //               } else {
+  //                 await launchUrlString(Constant.githubRepository,
+  //                     mode: LaunchMode.externalApplication);
+  //               }
+  //             } else {
+  //               log.e(
+  //                   "can't open browser to url : ${Constant.githubRepository}");
+  //             }
+  //           },
+  //         ),
+  //         Container(
+  //             margin: EdgeInsets.fromLTRB(0, 10, 0, 5),
+  //             padding: EdgeInsets.all(0),
+  //             child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text("Sudoku powered by Flutter",
+  //                       style: TextStyle(fontSize: 12)),
+  //                   Text(Constant.githubRepository,
+  //                       style: TextStyle(fontSize: 12))
+  //                 ]))
+  //       ]);
+  // }
 
   bool _isOnlyReadGrid(int index) => (_state.sudoku?.puzzle[index] ?? 0) != -1;
 
@@ -279,13 +288,13 @@ class _SudokuGamePageState extends State<SudokuGamePage>
                             tooltip: "Watch Ad (Get Extra Life)",
                             onPressed: () => Navigator.pop(context, "ad"),
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.thumb_up, color: Colors.white),
-                          tooltip: "Like Game",
-                          onPressed: () {
-                            // future: show rating, share, etc.
-                          },
-                        ),
+                        // IconButton(
+                        //   icon: const Icon(Icons.thumb_up, color: Colors.white),
+                        //   tooltip: "Like Game",
+                        //   onPressed: () {
+                        //     // future: show rating, share, etc.
+                        //   },
+                        // ),
                         IconButton(
                           icon: const Icon(Icons.exit_to_app,
                               color: Colors.white),
@@ -312,6 +321,8 @@ class _SudokuGamePageState extends State<SudokuGamePage>
     switch (signal) {
       case "ad":
         // TODO: logic xem quảng cáo để hồi sinh
+        widget.showAds!();
+        _state.lifeAdd();
         break;
       case "exit":
       default:
@@ -400,59 +411,76 @@ class _SudokuGamePageState extends State<SudokuGamePage>
 
         return Expanded(
           flex: 1,
-          child: Container(
-            margin: EdgeInsets.all(2),
-            decoration: BoxDecoration(border: BorderDirectional()),
-            child: CupertinoButton(
-              color: _markOpen ? markBgColor : recordBgColor,
-              borderRadius: BorderRadius.circular(99),
-              padding: EdgeInsets.all(1),
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: _markOpen ? markFontColor : recordFontColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+          child: GestureDetector(
+            onTap: fillOnPressed,
+            child: Container(
+              margin: EdgeInsets.all(2),
+              // padding: EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(border: BorderDirectional()),
+              child: Container(
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _markOpen ? markBgColor : recordBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    color: _markOpen ? markFontColor : recordFontColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              onPressed: fillOnPressed,
             ),
           ),
         );
       },
     );
 
-    fillTools.add(Expanded(
+    fillTools.add(
+      Expanded(
         flex: 1,
-        child: Container(
-            margin: EdgeInsets.all(2),
-            decoration: BoxDecoration(border: BorderDirectional()),
-            child: CupertinoButton(
-                padding: EdgeInsets.all(8),
-                color: Colors.white10,
-                borderRadius: BorderRadius.circular(99),
-                child: Image(
-                  image: eraserAssetImage,
-                  width: 40,
-                  height: 40,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  log.d("""
+        child: GestureDetector(
+          onTap: () {
+            log.d("""
                   when ${_chooseSudokuBox + 1} is not a puzzle , then clean the choose \n
                   清除 ${_chooseSudokuBox + 1} 选型 , 如果他不是固定值的话
                   """);
-                  if (_isOnlyReadGrid(_chooseSudokuBox)) {
-                    // read only item , skip it - 只读格
-                    return;
-                  }
-                  if (_state.status != SudokuGameStatus.gaming) {
-                    // not playing , skip it - 未在游戏进行时
-                    return;
-                  }
-                  _state.cleanMark(_chooseSudokuBox);
-                  _state.cleanRecord(_chooseSudokuBox);
-                }))));
+            if (_isOnlyReadGrid(_chooseSudokuBox)) {
+              // read only item , skip it - 只读格
+              return;
+            }
+            if (_state.status != SudokuGameStatus.gaming) {
+              // not playing , skip it - 未在游戏进行时
+              return;
+            }
+            _state.cleanMark(_chooseSudokuBox);
+            _state.cleanRecord(_chooseSudokuBox);
+          },
+          child: Container(
+            margin: EdgeInsets.all(2),
+            decoration: BoxDecoration(border: BorderDirectional()),
+            child: Container(
+              height: 40,
+              alignment: Alignment.center,
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                shape: BoxShape.circle,
+              ),
+              child: Image(
+                image: eraserAssetImage,
+                // width: 40,
+                // height: 40,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
 
     return Container(
       height: 40,
@@ -498,6 +526,11 @@ class _SudokuGamePageState extends State<SudokuGamePage>
     var tipsOnPressed;
     if (_state.hint > 0) {
       tipsOnPressed = () {
+        //show ads here
+
+        if (widget.showAds != null) {
+          widget.showAds!();
+        }
         // tips next cell answer
         log.d("top tips button");
         int hint = _state.hint;
@@ -540,7 +573,8 @@ class _SudokuGamePageState extends State<SudokuGamePage>
     var tipsText = '${SudokuLocalizations.of(context).tipsText}(${tips})';
     var enableMarkText = SudokuLocalizations.of(context).enableMarkText;
     var closeMarkText = SudokuLocalizations.of(context).closeMarkText;
-    var exitGameContentText = SudokuLocalizations.of(context).exitGameContentText;
+    var exitGameContentText =
+        SudokuLocalizations.of(context).exitGameContentText;
     // define i18n text end
     var exitGameOnPressed = () async {
       await showDialog(
@@ -725,9 +759,9 @@ class _SudokuGamePageState extends State<SudokuGamePage>
         textColor = Colors.redAccent; // sai
         isWrong = true;
       } else if (currentNum != -1) {
-        textColor = Colors.white; // người dùng nhập đúng
-        fontSize = 24;
-        fontFamily = "handwriting_digits";
+        textColor = Colors.blue; // người dùng nhập đúng
+        // fontSize = 24;
+        // fontFamily = "handwriting_digits";
       } else {
         textColor = Colors.grey.shade700; // trống
       }
@@ -939,7 +973,7 @@ class _SudokuGamePageState extends State<SudokuGamePage>
                 //     ],
                 //   ),
                 // ),
-                BackButton(),
+                BackButton(color: Colors.white),
                 // indicator
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -995,34 +1029,32 @@ class _SudokuGamePageState extends State<SudokuGamePage>
 
           /// 9 x 9 cells sudoku puzzle board
           /// the whole sudoku game draw it here
-          Container(
-            // color: Colors.yellow,
-            child: GridView.builder(
-              physics: NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: 81,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 9,
-              ),
-              itemBuilder: (BuildContext context, int index) {
-                int num = -1;
-                if (_state.sudoku?.puzzle.length == 81) {
-                  num = _state.sudoku!.puzzle[index];
-                }
-
-                // 用户做标记
-                bool isUserMark = _state.sudoku!.puzzle[index] == -1 &&
-                    _state.mark[index].any((element) => element);
-
-                if (isUserMark) {
-                  return _markGridCellWidget(
-                      context, index, _cellOnTapBuilder(index));
-                }
-
-                return _gridCellWidget(
-                    context, index, num, _cellOnTapBuilder(index));
-              },
+          GridView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.all(8),
+            shrinkWrap: true,
+            itemCount: 81,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 9,
             ),
+            itemBuilder: (BuildContext context, int index) {
+              int num = -1;
+              if (_state.sudoku?.puzzle.length == 81) {
+                num = _state.sudoku!.puzzle[index];
+              }
+
+              // 用户做标记
+              bool isUserMark = _state.sudoku!.puzzle[index] == -1 &&
+                  _state.mark[index].any((element) => element);
+
+              if (isUserMark) {
+                return _markGridCellWidget(
+                    context, index, _cellOnTapBuilder(index));
+              }
+
+              return _gridCellWidget(
+                  context, index, num, _cellOnTapBuilder(index));
+            },
           ),
 
           /// user input zone
@@ -1031,7 +1063,8 @@ class _SudokuGamePageState extends State<SudokuGamePage>
           Container(margin: EdgeInsets.fromLTRB(0, 5, 0, 5)),
           _fillZone(context),
           Container(margin: EdgeInsets.fromLTRB(0, 5, 0, 5)),
-          _toolZone(context, _state.hint)
+          _toolZone(context, _state.hint),
+          widget.nativedAds ?? Container(),
         ],
       ),
     );

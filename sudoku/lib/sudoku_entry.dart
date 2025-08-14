@@ -30,10 +30,10 @@ Future<SudokuState> loadSudokuState() async {
   return await SudokuState.resumeFromDB();
 }
 
-Widget buildSudokuApp({SudokuState? state}) {
+Widget buildSudokuApp({SudokuState? state, Widget? bannerAds, Widget? nativedAds, VoidCallback? showAds}) {
   SudokuState sudokuState = state ?? SudokuState();
-  BootstrapPage bootstrapPage = BootstrapPage(title: "Loading");
-  SudokuGamePage sudokuGamePage = SudokuGamePage(title: "Sudoku");
+  BootstrapPage bootstrapPage = BootstrapPage(title: "Loading", bannerAds: bannerAds,);
+  SudokuGamePage sudokuGamePage = SudokuGamePage(title: "Sudoku", nativedAds: nativedAds, showAds: showAds);
 
   return ScopedModel<SudokuState>(
     model: sudokuState,

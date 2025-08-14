@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:camera/camera.dart';
+// import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,19 +9,24 @@ import 'package:sudoku/l10n/sudoku_localizations.dart';
 import 'package:logger/logger.dart' hide Level;
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:sudoku/effect/sound_effect.dart';
+// import 'package:sudoku/effect/sound_effect.dart';
 import 'package:sudoku/native/sudoku.dart';
 import 'package:sudoku/size_extension.dart';
 import 'package:sudoku/state/sudoku_state.dart';
 import 'package:sudoku/util/localization_util.dart';
 import 'package:sudoku_dart/sudoku_dart.dart';
 
-import 'ai_scan.dart';
+// import 'ai_scan.dart';
 
 final Logger log = Logger();
 
 class BootstrapPage extends StatefulWidget {
-  BootstrapPage({Key? key, required this.title}) : super(key: key);
+  final Widget? bannerAds;
+  BootstrapPage({
+    Key? key,
+    required this.title,
+    this.bannerAds,
+  }) : super(key: key);
 
   final String title;
 
@@ -38,40 +43,40 @@ Widget _buttonWrapper(
       child: childBuilder(context));
 }
 
-Widget _aiSolverButton(BuildContext context) {
-  String buttonLabel = SudokuLocalizations.of(context).menuAISolver;
-  return Offstage(
-      offstage: false,
-      child: _buttonWrapper(
-          context,
-          (content) => CupertinoButton(
-                color: Colors.blue,
-                child: Text(
-                  "$buttonLabel / test /",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: "montserrat",
-                  ),
-                ),
-                onPressed: () async {
-                  log.d("AI Solver Scanner");
+// Widget _aiSolverButton(BuildContext context) {
+//   String buttonLabel = SudokuLocalizations.of(context).menuAISolver;
+//   return Offstage(
+//       offstage: false,
+//       child: _buttonWrapper(
+//           context,
+//           (content) => CupertinoButton(
+//                 color: Colors.blue,
+//                 child: Text(
+//                   "$buttonLabel / test /",
+//                   style: TextStyle(
+//                     color: Colors.white,
+//                     fontFamily: "montserrat",
+//                   ),
+//                 ),
+//                 onPressed: () async {
+//                   log.d("AI Solver Scanner");
 
-                  WidgetsFlutterBinding.ensureInitialized();
+//                   WidgetsFlutterBinding.ensureInitialized();
 
-                  final cameras = await availableCameras();
-                  final firstCamera = cameras.first;
-                  final aiScanPage = AIScanPage(camera: firstCamera);
+//                   final cameras = await availableCameras();
+//                   final firstCamera = cameras.first;
+//                   final aiScanPage = AIScanPage(camera: firstCamera);
 
-                  Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                          opaque: false,
-                          pageBuilder: (BuildContext context, _, __) {
-                            return aiScanPage;
-                          }));
-                },
-              )));
-}
+//                   Navigator.push(
+//                       context,
+//                       PageRouteBuilder(
+//                           opaque: false,
+//                           pageBuilder: (BuildContext context, _, __) {
+//                             return aiScanPage;
+//                           }));
+//                 },
+//               )));
+// }
 
 Widget _continueGameButton(BuildContext context) {
   return ScopedModelDescendant<SudokuState>(builder: (context, child, state) {
@@ -143,7 +148,7 @@ Widget _newGameButton(BuildContext context) {
                         child: Text(
                           levelName,
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -159,13 +164,14 @@ Widget _newGameButton(BuildContext context) {
 
             showCupertinoModalBottomSheet(
               context: context,
-              barrierColor: Colors.black38,
+              barrierColor: Color(0xFF0D0D0D),
               topRadius: Radius.circular(20),
               builder: (context) {
                 return SafeArea(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Material(
+                      color: Colors.white24,
                         child: Container(
                             height: 320,
                             child: Column(
@@ -197,10 +203,11 @@ void _internalSudokuGenerate(List<dynamic> args) {
 }
 
 Future _sudokuGenerate(BuildContext context, Level level) async {
-  String sudokuGenerateText = SudokuLocalizations.of(context).sudokuGenerateText;
-
+  String sudokuGenerateText =
+      SudokuLocalizations.of(context).sudokuGenerateText;
+  final ppContext = context;
   showDialog(
-      context: context,
+      context: ppContext,
       barrierDismissible: false,
       builder: (context) => Dialog(
           child: Container(
@@ -214,7 +221,7 @@ Future _sudokuGenerate(BuildContext context, Level level) async {
               ]))));
 
   ReceivePort receivePort = ReceivePort();
-
+  log.d("receivePort.listen start!");
   Isolate isolate = await Isolate.spawn(
       _internalSudokuGenerate, [level, receivePort.sendPort]);
   var data = await receivePort.first;
@@ -227,57 +234,18 @@ Future _sudokuGenerate(BuildContext context, Level level) async {
   log.d("receivePort.listen done!");
 
   // dismiss dialog
-  Navigator.pop(context);
+  // Navigator.pop(ppContext);
+  Navigator.of(context, rootNavigator: true).pop();
 }
 
 class _BootstrapPageState extends State<BootstrapPage> {
   @override
   Widget build(BuildContext context) {
-    Widget logo = Text(
-      "/ suˈdoʊku: /",
-      style: TextStyle(
-        fontFamily: "montserrat",
-        color: Colors.black,
-        fontSize: (55.0).r,
-      ),
-    );
-
-    Widget buttons = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        IconButton(
-          onPressed: () async {
-            var languageCode = Localizations.localeOf(context).languageCode;
-            await SoundEffect.sudokuSpeak(languageCode);
-          },
-          icon: Icon(
-            size: 18,
-            Icons.keyboard_voice_rounded,
-            color: Colors.black26,
-          ),
-        )
-            .animate()
-            .fadeIn(delay: 1500.ms)
-            .then()
-            .animate(onPlay: (ctrl) => ctrl.loop(reverse: true))
-            .scaleXY(end: 1.35, duration: 600.ms, delay: 2200.ms)
-            .blurXY(end: 1.2, duration: 600.ms, delay: 2200.ms)
-      ],
-    );
-
     Widget banner = Container(
       alignment: Alignment.center,
       width: 400,
       // color:Colors.yellow,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          logo,
-          buttons,
-        ],
-      ),
+      child: Image.asset('packages/sudoku/assets/image/icon.png'),
     )
         .animate()
         .fadeIn(duration: 1500.ms)
@@ -300,32 +268,21 @@ class _BootstrapPageState extends State<BootstrapPage> {
       ],
     );
 
+    print(widget.bannerAds);
     Widget body = Container(
       color: Color(0xFF0D0D0D),
       padding: EdgeInsets.all(25.0),
       child: Column(
-
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           // logo
           Expanded(flex: 1, child: banner),
+          _newGameButton(context),
           Expanded(
-            flex: 1,
-            child: Column(
-              // mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // continue the game
-                _continueGameButton(context),
-                // new game
-                _newGameButton(context),
-                // ai solver scanner
-                // _aiSolverButton(context),
-              ],
-            ).animate().fadeIn(
-                  delay: 1200.ms,
-                  duration: 1000.ms,
-                  curve: Curves.bounceOut,
-                ),
-          )
+            flex: 2,
+            child: widget.bannerAds ?? Container(),
+          ),
+          // Spacer(),
         ],
       ),
     );
