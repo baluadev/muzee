@@ -418,5 +418,22 @@
   "next": "Next",
   "previous": "Previous",
   "openPlayer": "Open player",
-  "closePlayer": "Close player"
+  "closePlayer": "Close player",
+  "exitFullscreen": "Exit full screen",
+  "seekBackSeconds": "Back {seconds} seconds",
+  "@seekBackSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "seekForwardSeconds": "Forward {seconds} seconds",
+  "@seekForwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

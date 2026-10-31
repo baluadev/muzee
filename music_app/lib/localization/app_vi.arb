@@ -383,5 +383,8 @@
   "next": "Bài tiếp theo",
   "previous": "Bài trước",
   "openPlayer": "Mở trình phát",
-  "closePlayer": "Đóng trình phát"
+  "closePlayer": "Đóng trình phát",
+  "exitFullscreen": "Thoát toàn màn hình",
+  "seekBackSeconds": "Lùi {seconds} giây",
+  "seekForwardSeconds": "Tiến {seconds} giây"
 }

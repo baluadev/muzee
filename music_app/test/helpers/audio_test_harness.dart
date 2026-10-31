@@ -105,6 +105,23 @@ class TestAudioHandler extends MusifyAudioHandler {
   /// Songs that actually started playing, in order.
   final List<String> played = [];
 
+  /// Positions passed to [seek], in order.
+  final List<Duration> seeks = [];
+
+  @override
+  Future<void> seek(Duration position) async {
+    seeks.add(position);
+    await super.seek(position);
+  }
+
+  /// Reports a loaded track of [length], playing at [position], the way
+  /// media_kit would.
+  void reportTrack(Duration length, {Duration position = Duration.zero}) {
+    _engine
+      ..durationController.add(length)
+      ..positionController.add(position);
+  }
+
   final SilentPlatformPlayer _engine;
   bool _retired = false;
 
