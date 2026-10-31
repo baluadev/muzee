@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds always use Google's sample AdMob app ID, so test runs
+         never request ads against the real account. Release builds use
+         src/main/res/values/admob.xml. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>

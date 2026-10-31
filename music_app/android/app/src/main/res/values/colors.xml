@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#000000</color>
+    <!-- The app is always dark: splash and the window behind Flutter use the
+         app background so there is no white flash on light-mode phones. -->
+    <color name="splash_background">#0D0D0D</color>
+</resources>

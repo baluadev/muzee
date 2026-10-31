@@ -1,28 +1,50 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muzee/main.dart' show logger;
+import 'package:muzee/services/firebase/firebase_service.dart';
 
-class FirebaseAnalyticsService {
-  static final FirebaseAnalyticsService inst =
-      FirebaseAnalyticsService._internal();
-  FirebaseAnalyticsService._internal();
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+/// Firebase Analytics, with the event names Muzee 1.x used (`openApp`,
+/// `search_input`) so the reports stay comparable.
+class AnalyticsService {
+  AnalyticsService._();
 
-  void setup() {
-    logEvent('openApp');
+  static Future<void> logEvent(
+    String name, {
+    Map<String, Object>? parameters,
+  }) async {
+    if (!FirebaseService.isReady) return;
+    try {
+      await FirebaseAnalytics.instance.logEvent(
+        name: name,
+        parameters: parameters,
+      );
+    } catch (e) {
+      logger.log('Analytics event "$name" failed', error: e);
+    }
   }
 
-  Future<void> logScreenEvent(String screen,
-      {Map<String, Object>? data}) async {
-    logEvent(screen);
+  static Future<void> logScreen(String path) async {
+    if (!FirebaseService.isReady) return;
+    try {
+      await FirebaseAnalytics.instance.logScreenView(screenName: path);
+    } catch (e) {
+      logger.log('Analytics screen "$path" failed', error: e);
+    }
   }
 
-  Future<void> logKeySearchEvent(String keyword) async {
-    logEvent('search_input', data: {'keyword': keyword});
+  /// Logs a screen view each time [router] lands on a new path.
+  static void trackScreens(GoRouter router) {
+    String? last;
+    router.routerDelegate.addListener(() {
+      final path = router.routerDelegate.currentConfiguration.uri.path;
+      if (path == last) return;
+      last = path;
+      unawaited(logScreen(path));
+    });
   }
 
-  Future<void> logEvent(String name, {Map<String, Object>? data}) async {
-    await analytics.logEvent(
-      name: name,
-      parameters: data,
-    );
-  }
+  static Future<void> logSearch(String keyword) =>
+      logEvent('search_input', parameters: {'keyword': keyword});
 }

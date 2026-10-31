@@ -1,0 +1,25 @@
+name: tuber_playback
+description: >-
+  Music playback service shared by the Tuber apps: a queue-aware
+  audio_service handler over media_kit, with YouTube stream lookup.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.11.0 <4.0.0'
+  flutter: ^3.41.6
+
+dependencies:
+  audio_service: ^0.18.18
+  audio_session: ^0.2.3
+  flutter:
+    sdk: flutter
+  http: ^1.6.0
+  media_kit: ^1.2.6
+  rxdart: ^0.28.0
+  youtube_explode_dart:
+    path: ../youtube_explode_dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

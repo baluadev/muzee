@@ -1,0 +1,3 @@
+tags:
+  network:
+    skip: "Calls real YouTube. Run with: flutter test --tags network --run-skipped"

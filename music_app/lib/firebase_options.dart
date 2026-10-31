@@ -63,7 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '711681429122',
     projectId: 'muzee-6dc1d',
     storageBucket: 'muzee-6dc1d.firebasestorage.app',
-    iosClientId: '711681429122-g44dqmf45lvhjj803tkd13l4h63j624v.apps.googleusercontent.com',
+    iosClientId:
+        '711681429122-g44dqmf45lvhjj803tkd13l4h63j624v.apps.googleusercontent.com',
     iosBundleId: 'com.nexstudio.up.muzee',
   );
 }

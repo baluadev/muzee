@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      # Only the Muzee 1.x models (used to read the old database) are generated.
+      isar_community_generator:isar_community_generator:
+        generate_for:
+          - lib/services/legacy/isar/**.dart
