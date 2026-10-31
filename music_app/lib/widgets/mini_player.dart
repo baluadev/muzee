@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/models/full_player_state.dart';
-import 'package:muzee/screens/now_playing_page.dart';
+import 'package:muzee/screens/now_playing_route.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/widgets/marquee.dart';
+import 'package:muzee/widgets/now_playing/now_playing_drag_opener.dart';
 import 'package:muzee/widgets/song_artwork.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuber_playback/tuber_playback.dart';
@@ -91,7 +92,7 @@ class _MiniPlayerBody extends StatefulWidget {
 }
 
 class _MiniPlayerBodyState extends State<_MiniPlayerBody>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
 
@@ -109,35 +110,28 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
 
   @override
   void dispose() {
+    _opener.dispose();
     _animationController.dispose();
     super.dispose();
   }
 
-  static const double _dragThresholdForNavigation = 10;
-
-  void _handleVerticalDrag(DragUpdateDetails details) {
-    if ((details.primaryDelta ?? 0) < -_dragThresholdForNavigation) {
-      _navigateToNowPlaying();
-    }
-  }
+  late final _opener = NowPlayingDragOpener(vsync: this);
 
   void _navigateToNowPlaying() {
-    Navigator.of(context).push(_createSlideTransition());
+    Navigator.of(context).push(NowPlayingRoute());
   }
 
-  PageRoute<void> _createSlideTransition() {
-    return PageRouteBuilder<void>(
-      pageBuilder: (context, animation, _) => const NowPlayingPage(),
-      reverseTransitionDuration: const Duration(milliseconds: 250),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        final tween = Tween(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).chain(CurveTween(curve: Curves.easeInOut));
-        return SlideTransition(position: animation.drive(tween), child: child);
-      },
-    );
-  }
+  void _onDragStart(DragStartDetails _) => _opener.start(context);
+
+  void _onDragUpdate(DragUpdateDetails details) => _opener.update(
+    details.primaryDelta ?? 0,
+    MediaQuery.sizeOf(context).height,
+  );
+
+  void _onDragEnd(DragEndDetails details) =>
+      _opener.end(context, details.primaryVelocity ?? 0);
+
+  void _onDragCancel() => _opener.end(context, 0);
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +159,10 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
           onTapDown: (_) => _animationController.forward(),
           onTapUp: (_) => _animationController.reverse(),
           onTapCancel: () => _animationController.reverse(),
-          onVerticalDragUpdate: _handleVerticalDrag,
+          onVerticalDragStart: _onDragStart,
+          onVerticalDragUpdate: _onDragUpdate,
+          onVerticalDragEnd: _onDragEnd,
+          onVerticalDragCancel: _onDragCancel,
           onTap: _navigateToNowPlaying,
           child: Container(
             margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
@@ -244,7 +241,8 @@ class _ArtworkWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Hero(
-        tag: 'now_playing_artwork',
+        tag: nowPlayingArtworkHeroTag,
+        transitionOnUserGestures: true,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),

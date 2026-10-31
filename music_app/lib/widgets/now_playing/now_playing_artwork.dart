@@ -5,11 +5,24 @@ import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
+import 'package:muzee/screens/now_playing_route.dart';
 import 'package:muzee/screens/video_fullscreen_page.dart';
 import 'package:muzee/services/common_services.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/utilities/async_loader.dart';
 import 'package:muzee/widgets/song_artwork.dart';
+
+/// Marks a `NowPlayingPage` built as a drag preview: its artwork shows the
+/// still image (no video surface, no Hero).
+class NowPlayingPreview extends InheritedWidget {
+  const NowPlayingPreview({super.key, required super.child});
+
+  static bool of(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<NowPlayingPreview>() != null;
+
+  @override
+  bool updateShouldNotify(NowPlayingPreview oldWidget) => false;
+}
 
 class NowPlayingArtwork extends StatelessWidget {
   const NowPlayingArtwork({
@@ -42,31 +55,56 @@ class NowPlayingArtwork extends StatelessWidget {
         : screenWidth * 0.60;
 
     const borderRadius = 8.0;
+    final preview = NowPlayingPreview.of(context);
 
     return FlipCard(
       rotateSide: RotateSide.right,
       onTapFlipping: !offlineMode.value,
       controller: lyricsController,
-      frontWidget: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: _NowPlayingMediaSurface(
+      frontWidget: HeroMode(
+        enabled: !preview,
+        child: Hero(
+          tag: nowPlayingArtworkHeroTag,
+          transitionOnUserGestures: true,
+          // In flight, the still artwork stands in for a video, so the player's
+          // video surface isn't rebuilt mid-move.
+          flightShuttleBuilder: (_, __, ___, ____, _____) => SongArtworkWidget(
             metadata: metadata,
-            size: imageWidth,
-            height: imageHeight,
+            size: double.infinity,
+            height: double.infinity,
             errorWidgetIconSize: size.width / 8,
             borderRadius: borderRadius,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.15),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: preview
+                  ? SongArtworkWidget(
+                      metadata: metadata,
+                      size: imageWidth,
+                      height: imageHeight,
+                      errorWidgetIconSize: size.width / 8,
+                      borderRadius: borderRadius,
+                    )
+                  : _NowPlayingMediaSurface(
+                      metadata: metadata,
+                      size: imageWidth,
+                      height: imageHeight,
+                      errorWidgetIconSize: size.width / 8,
+                      borderRadius: borderRadius,
+                    ),
+            ),
           ),
         ),
       ),
@@ -179,6 +217,9 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
   VideoController? _videoController;
   String? _videoRenderKey;
 
+  /// Whether the current controller has drawn a frame yet.
+  bool _videoShowing = false;
+
   bool get _isVideo => widget.metadata.extras?['isVideo'] == true;
   String? get _videoSource =>
       widget.metadata.extras?['videoSource']?.toString();
@@ -223,6 +264,12 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
         _videoController == null ||
         _videoRenderKey != nextKey) {
       final controller = VideoController(audioHandler.audioPlayer.nativePlayer);
+      _videoShowing = false;
+      controller.waitUntilFirstFrameRendered.then((_) {
+        if (mounted && _videoController == controller) {
+          setState(() => _videoShowing = true);
+        }
+      });
       if (mounted) {
         setState(() {
           _videoController = controller;
@@ -244,6 +291,8 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
     if (_isVideo && _videoController != null) {
       return Stack(
         children: [
+          // The artwork shows through until the video's first frame.
+          if (!_videoShowing) _artwork(),
           SizedBox(
             width: widget.size,
             height: widget.height ?? widget.size,
@@ -251,6 +300,7 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
               controller: _videoController!,
               pauseUponEnteringBackgroundMode: false,
               controls: NoVideoControls,
+              fill: Colors.transparent,
             ),
           ),
           Positioned(
@@ -286,12 +336,14 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
       );
     }
 
-    return SongArtworkWidget(
-      metadata: widget.metadata,
-      size: widget.size,
-      height: widget.height,
-      errorWidgetIconSize: widget.errorWidgetIconSize,
-      borderRadius: widget.borderRadius,
-    );
+    return _artwork();
   }
+
+  Widget _artwork() => SongArtworkWidget(
+    metadata: widget.metadata,
+    size: widget.size,
+    height: widget.height,
+    errorWidgetIconSize: widget.errorWidgetIconSize,
+    borderRadius: widget.borderRadius,
+  );
 }

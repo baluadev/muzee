@@ -19,8 +19,17 @@ class _PositionSliderState extends State<PositionSlider> {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
+    final player = audioHandler.audioPlayer;
     return StreamBuilder<PositionData>(
       stream: audioHandler.positionDataStream,
+      // The current position, so a freshly opened player doesn't start at 0.
+      initialData: player.duration == null
+          ? null
+          : PositionData(
+              player.position,
+              player.bufferedPosition,
+              player.duration!,
+            ),
       builder: (context, snapshot) {
         final hasData = snapshot.hasData && snapshot.data != null;
         final positionData = hasData

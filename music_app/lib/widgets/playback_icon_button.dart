@@ -11,6 +11,8 @@ Widget buildPlaybackIconButton(
   EdgeInsets? padding,
 }) {
   return StreamBuilder<PlaybackState>(
+    // The current state, so the first frame shows the right icon.
+    initialData: audioHandler.playbackState.value,
     stream: audioHandler.playbackState.distinct((previous, current) {
       // Only rebuild if relevant state changes
       return previous.playing == current.playing &&

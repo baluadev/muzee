@@ -18,7 +18,12 @@ import 'package:muzee/widgets/position_slider.dart';
 import 'package:muzee/widgets/queue_list_view.dart';
 
 class NowPlayingPage extends StatefulWidget {
-  const NowPlayingPage({super.key});
+  const NowPlayingPage({super.key, this.preview = false});
+
+  /// A stand-in shown under the finger while the mini player is dragged up:
+  /// still artwork instead of video, no touch input, and it leaves the
+  /// "player is open" flag alone.
+  final bool preview;
 
   @override
   State<NowPlayingPage> createState() => _NowPlayingPageState();
@@ -26,11 +31,12 @@ class NowPlayingPage extends StatefulWidget {
 
 class _NowPlayingPageState extends State<NowPlayingPage> {
   final _lyricsController = FlipCardController();
-  late final VideoController _pipVideoController;
+  VideoController? _pipVideoController;
 
   @override
   void initState() {
     super.initState();
+    if (widget.preview) return;
     UiRouteFlags.nowPlayingVisible.value = true;
     _pipVideoController = VideoController(
       audioHandler.audioPlayer.nativePlayer,
@@ -39,7 +45,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
 
   @override
   void dispose() {
-    UiRouteFlags.nowPlayingVisible.value = false;
+    if (!widget.preview) UiRouteFlags.nowPlayingVisible.value = false;
     super.dispose();
   }
 
@@ -55,61 +61,60 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
         : 44.0;
     final miniIconSize = screenWidth < 360 ? 18.0 : 22.0;
 
-    return Scaffold(
-      body: GestureDetector(
-        // Swipe down anywhere (outside the slider and lyrics) to close.
-        onVerticalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0) > 600) Navigator.maybePop(context);
-        },
-        child: SafeArea(
-          child: StreamBuilder<MediaItem?>(
-            stream: audioHandler.mediaItem,
-            builder: (context, snapshot) {
-              final metadata = snapshot.data;
-              if (metadata == null) {
-                return Column(
-                  children: [
-                    _buildAppBar(context, null),
-                    const Expanded(
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ],
-                );
-              }
-              return PiPSwitcher(
-                childWhenEnabled: _PipVideoOnlySurface(
-                  controller: _pipVideoController,
-                  metadata: metadata,
-                ),
-                childWhenDisabled: Column(
-                  children: [
-                    _buildAppBar(context, metadata),
-                    Expanded(
-                      child: isLargeScreen
-                          ? _DesktopLayout(
-                              metadata: metadata,
-                              size: size,
-                              adjustedIconSize: baseIconSize,
-                              adjustedMiniIconSize: miniIconSize,
-                              lyricsController: _lyricsController,
-                            )
-                          : _MobileLayout(
-                              metadata: metadata,
-                              size: size,
-                              adjustedIconSize: baseIconSize,
-                              adjustedMiniIconSize: miniIconSize,
-                              isLargeScreen: isLargeScreen,
-                              lyricsController: _lyricsController,
-                            ),
-                    ),
-                  ],
-                ),
+    final page = Scaffold(
+      body: SafeArea(
+        child: StreamBuilder<MediaItem?>(
+          stream: audioHandler.mediaItem,
+          builder: (context, snapshot) {
+            final metadata = snapshot.data;
+            if (metadata == null) {
+              return Column(
+                children: [
+                  _buildAppBar(context, null),
+                  const Expanded(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ],
               );
-            },
-          ),
+            }
+            final player = Column(
+              children: [
+                _buildAppBar(context, metadata),
+                Expanded(
+                  child: isLargeScreen
+                      ? _DesktopLayout(
+                          metadata: metadata,
+                          size: size,
+                          adjustedIconSize: baseIconSize,
+                          adjustedMiniIconSize: miniIconSize,
+                          lyricsController: _lyricsController,
+                        )
+                      : _MobileLayout(
+                          metadata: metadata,
+                          size: size,
+                          adjustedIconSize: baseIconSize,
+                          adjustedMiniIconSize: miniIconSize,
+                          isLargeScreen: isLargeScreen,
+                          lyricsController: _lyricsController,
+                        ),
+                ),
+              ],
+            );
+            final pip = _pipVideoController;
+            if (pip == null) return player;
+            return PiPSwitcher(
+              childWhenEnabled: _PipVideoOnlySurface(
+                controller: pip,
+                metadata: metadata,
+              ),
+              childWhenDisabled: player,
+            );
+          },
         ),
       ),
     );
+    if (!widget.preview) return page;
+    return IgnorePointer(child: NowPlayingPreview(child: page));
   }
 
   Widget _buildAppBar(BuildContext context, MediaItem? metadata) {
