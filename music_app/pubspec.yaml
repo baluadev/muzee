@@ -32,7 +32,6 @@ dependencies:
   google_mobile_ads: ^8.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  html: ^0.15.6
   http: ^1.6.0
   in_app_purchase: ^3.2.3
   intl: ^0.20.2

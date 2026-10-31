@@ -124,7 +124,12 @@ class NowPlayingArtwork extends StatelessWidget {
           ],
         ),
         child: AsyncLoader<String?>(
-          future: getSongLyrics(metadata.artist, metadata.title),
+          future: getSongLyrics(
+            videoId: metadata.extras?['ytid']?.toString(),
+            artist: metadata.artist,
+            title: metadata.title,
+            duration: metadata.duration,
+          ),
           emptyWidget: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

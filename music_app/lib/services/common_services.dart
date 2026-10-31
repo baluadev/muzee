@@ -34,9 +34,6 @@ final currentRecentlyPlayedLength = ValueNotifier<int>(
 );
 final recentlyPlayedVersion = ValueNotifier<int>(0);
 
-final lyrics = ValueNotifier<String?>(null);
-String? lastFetchedLyrics;
-
 // Timeouts and durations used across manifest fetching and cache validation.
 const Duration _manifestTimeout = Duration(seconds: 30);
 const Duration _cacheValidationDuration = Duration(hours: 1);
@@ -554,24 +551,52 @@ Future<Map<String, dynamic>> getSongDetails(
   }
 }
 
-Future<String?> getSongLyrics(String? artist, String title) async {
-  if (artist == null) return null;
-  if (lastFetchedLyrics != '$artist - $title') {
-    lyrics.value = null;
-    var _lyrics = await LyricsManager().fetchLyrics(artist, title);
-    if (_lyrics != null) {
-      _lyrics = _lyrics.replaceAll(RegExp(r'\n{4}'), '\n\n');
-      _lyrics = _lyrics.replaceAll(RegExp(r'\n{2}'), '\n');
-      lyrics.value = _lyrics;
-    } else {
-      return null;
-    }
+/// Lyrics lookups by song, shared so the player rebuilding doesn't ask the
+/// network again. A miss is looked up again after [_lyricsMissRetry].
+final _lyricsCache = <String, _LyricsLookup>{};
+const _lyricsMissRetry = Duration(minutes: 2);
+const _lyricsCacheSize = 30;
 
-    lastFetchedLyrics = '$artist - $title';
-    return _lyrics;
+class _LyricsLookup {
+  _LyricsLookup(this.lyrics) {
+    lyrics.then((text) => missed = text == null).ignore();
   }
 
-  return lyrics.value;
+  final Future<String?> lyrics;
+  final DateTime at = DateTime.now();
+  bool missed = false;
+}
+
+/// Lyrics for a song (see [LyricsManager]), or null if no source has them.
+Future<String?> getSongLyrics({
+  String? videoId,
+  required String? artist,
+  required String title,
+  Duration? duration,
+}) {
+  final key = videoId ?? '$artist - $title';
+  final cached = _lyricsCache[key];
+  if (cached != null &&
+      !(cached.missed &&
+          DateTime.now().difference(cached.at) > _lyricsMissRetry)) {
+    return cached.lyrics;
+  }
+
+  final lookup = _LyricsLookup(
+    LyricsManager().fetchLyrics(
+      videoId: videoId,
+      artist: artist,
+      title: title,
+      duration: duration,
+    ),
+  );
+  _lyricsCache
+    ..remove(key)
+    ..[key] = lookup;
+  if (_lyricsCache.length > _lyricsCacheSize) {
+    _lyricsCache.remove(_lyricsCache.keys.first);
+  }
+  return lookup.lyrics;
 }
 
 const recentlyPlayedSongsLimit = 250;
