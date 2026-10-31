@@ -12,6 +12,8 @@ import 'package:muzee/widgets/now_playing/bottom_actions_row.dart';
 import 'package:muzee/widgets/now_playing/marquee_text_widget.dart';
 import 'package:muzee/widgets/now_playing/now_playing_artwork.dart';
 import 'package:muzee/widgets/now_playing/now_playing_controls.dart';
+import 'package:muzee/widgets/now_playing/now_playing_like_button.dart';
+import 'package:muzee/widgets/now_playing/now_playing_more_menu.dart';
 import 'package:muzee/widgets/position_slider.dart';
 import 'package:muzee/widgets/queue_list_view.dart';
 
@@ -63,10 +65,17 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
           child: StreamBuilder<MediaItem?>(
             stream: audioHandler.mediaItem,
             builder: (context, snapshot) {
-              if (snapshot.data == null || !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+              final metadata = snapshot.data;
+              if (metadata == null) {
+                return Column(
+                  children: [
+                    _buildAppBar(context, null),
+                    const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ],
+                );
               }
-              final metadata = snapshot.data!;
               return PiPSwitcher(
                 childWhenEnabled: _PipVideoOnlySurface(
                   controller: _pipVideoController,
@@ -74,7 +83,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                 ),
                 childWhenDisabled: Column(
                   children: [
-                    _buildAppBar(context),
+                    _buildAppBar(context, metadata),
                     Expanded(
                       child: isLargeScreen
                           ? _DesktopLayout(
@@ -103,7 +112,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context, MediaItem? metadata) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
@@ -123,14 +132,18 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
               ),
             ),
           ),
-          const SizedBox(width: 48),
+          if (metadata != null)
+            NowPlayingMoreMenu(metadata: metadata)
+          else
+            const SizedBox(width: 48),
         ],
       ),
     );
   }
 }
 
-/// Title and artist, under the artwork (scrolls when too long).
+/// Title and artist under the artwork (they scroll when too long), with the
+/// like button at the end of the row.
 class _TitleBlock extends StatelessWidget {
   const _TitleBlock({required this.metadata});
   final MediaItem metadata;
@@ -138,30 +151,34 @@ class _TitleBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artist = metadata.artist;
-    // Full width, so it lines up with the slider under it.
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          MarqueeTextWidget(
-            text: metadata.title,
-            fontColor: context.neo.onSurface,
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MarqueeTextWidget(
+                text: metadata.title,
+                fontColor: context.neo.onSurface,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
+              if (artist != null && artist.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                MarqueeTextWidget(
+                  text: artist,
+                  fontColor: context.neo.onSurfaceMuted,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ],
+            ],
           ),
-          if (artist != null && artist.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            MarqueeTextWidget(
-              text: artist,
-              fontColor: context.neo.onSurfaceMuted,
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-            ),
-          ],
-        ],
-      ),
+        ),
+        const SizedBox(width: 8),
+        NowPlayingLikeButton(audioId: metadata.extras?['ytid']),
+      ],
     );
   }
 }
@@ -231,21 +248,18 @@ class _DesktopLayout extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 16),
                   child: _TitleBlock(metadata: metadata),
                 ),
-                if (!(metadata.extras?['isLive'] ?? false))
-                  Expanded(
-                    flex: 4,
-                    child: NowPlayingControls(
-                      size: size,
-                      audioId: metadata.extras?['ytid'],
-                      adjustedIconSize: adjustedIconSize,
-                      adjustedMiniIconSize: adjustedMiniIconSize,
-                      metadata: metadata,
-                    ),
+                Expanded(
+                  flex: 4,
+                  child: NowPlayingControls(
+                    size: size,
+                    audioId: metadata.extras?['ytid'],
+                    adjustedIconSize: adjustedIconSize,
+                    adjustedMiniIconSize: adjustedMiniIconSize,
+                    metadata: metadata,
+                    isLive: metadata.extras?['isLive'] ?? false,
                   ),
+                ),
                 BottomActionsRow(
-                  audioId: metadata.extras?['ytid'],
-                  metadata: metadata,
-                  iconSize: adjustedMiniIconSize,
                   isLargeScreen: true,
                   lyricsController: lyricsController,
                 ),
@@ -308,24 +322,18 @@ class _MobileLayout extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
             child: _TitleBlock(metadata: metadata),
           ),
-          if (!isLive) ...[
-            const PositionSlider(),
-            const SizedBox(height: 4),
-            PlayerControlButtons(
-              metadata: metadata,
-              iconSize: adjustedIconSize,
-              miniIconSize: adjustedMiniIconSize,
-            ),
-          ],
+          if (!isLive) ...[const PositionSlider(), const SizedBox(height: 4)],
+          PlayerControlButtons(
+            metadata: metadata,
+            iconSize: adjustedIconSize,
+            miniIconSize: adjustedMiniIconSize,
+          ),
           const SizedBox(height: 16),
           BottomActionsRow(
-            audioId: metadata.extras?['ytid'],
-            metadata: metadata,
-            iconSize: adjustedMiniIconSize,
             isLargeScreen: isLargeScreen,
             lyricsController: lyricsController,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -356,20 +364,17 @@ class _MobileLayout extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: _TitleBlock(metadata: metadata),
                 ),
-                if (!(metadata.extras?['isLive'] ?? false))
-                  Expanded(
-                    child: NowPlayingControls(
-                      size: size,
-                      audioId: metadata.extras?['ytid'],
-                      adjustedIconSize: adjustedIconSize,
-                      adjustedMiniIconSize: adjustedMiniIconSize,
-                      metadata: metadata,
-                    ),
+                Expanded(
+                  child: NowPlayingControls(
+                    size: size,
+                    audioId: metadata.extras?['ytid'],
+                    adjustedIconSize: adjustedIconSize,
+                    adjustedMiniIconSize: adjustedMiniIconSize,
+                    metadata: metadata,
+                    isLive: metadata.extras?['isLive'] ?? false,
                   ),
+                ),
                 BottomActionsRow(
-                  audioId: metadata.extras?['ytid'],
-                  metadata: metadata,
-                  iconSize: adjustedMiniIconSize,
                   isLargeScreen: isLargeScreen,
                   lyricsController: lyricsController,
                 ),

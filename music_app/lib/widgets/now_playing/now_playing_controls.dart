@@ -17,6 +17,7 @@ class NowPlayingControls extends StatelessWidget {
     required this.adjustedIconSize,
     required this.adjustedMiniIconSize,
     required this.metadata,
+    this.isLive = false,
   });
 
   final Size size;
@@ -24,6 +25,9 @@ class NowPlayingControls extends StatelessWidget {
   final double adjustedIconSize;
   final double adjustedMiniIconSize;
   final MediaItem metadata;
+
+  /// Live streams have no timeline, so the slider is left out.
+  final bool isLive;
 
   @override
   Widget build(BuildContext context) {
@@ -52,13 +56,15 @@ class NowPlayingControls extends StatelessWidget {
           children: [
             if (!isCompact) const Spacer(),
             if (!isCompact) const Spacer(),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isDesktop ? 400 : constraints.maxWidth,
+            if (!isLive) ...[
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktop ? 400 : constraints.maxWidth,
+                ),
+                child: const PositionSlider(),
               ),
-              child: const PositionSlider(),
-            ),
-            SizedBox(height: spacing),
+              SizedBox(height: spacing),
+            ],
             PlayerControlButtons(
               metadata: metadata,
               iconSize: adjustedIconSize * iconScale,
@@ -132,15 +138,33 @@ class PlayerControlButtons extends StatelessWidget {
                 iconSize: iconSize,
                 padding: EdgeInsets.all(iconSize * 0.4),
               ),
-              IconButton(
-                tooltip: l10n.skipToNext,
-                iconSize: skipSize,
-                color: neo.onSurface,
-                icon: const Icon(FluentIcons.next_24_filled),
-                onPressed: () =>
-                    repeatNotifier.value == AudioServiceRepeatMode.one
-                    ? audioHandler.playAgain()
-                    : audioHandler.skipToNext(),
+              ValueListenableBuilder<AudioServiceRepeatMode>(
+                valueListenable: repeatNotifier,
+                builder: (_, mode, __) => ValueListenableBuilder<bool>(
+                  valueListenable: playNextSongAutomatically,
+                  builder: (_, autoplay, __) {
+                    // Mirrors skipToNext: it only does something with a song
+                    // after this one, a queue to wrap around, or autoplay.
+                    final canSkip =
+                        audioHandler.hasNext ||
+                        autoplay ||
+                        (mode == AudioServiceRepeatMode.all &&
+                            queue.isNotEmpty);
+                    final repeatsOne = mode == AudioServiceRepeatMode.one;
+                    return IconButton(
+                      tooltip: l10n.skipToNext,
+                      iconSize: skipSize,
+                      color: neo.onSurface,
+                      disabledColor: neo.onSurfaceSubtle,
+                      icon: const Icon(FluentIcons.next_24_filled),
+                      onPressed: repeatsOne
+                          ? audioHandler.playAgain
+                          : canSkip
+                          ? audioHandler.skipToNext
+                          : null,
+                    );
+                  },
+                ),
               ),
               ValueListenableBuilder<AudioServiceRepeatMode>(
                 valueListenable: repeatNotifier,

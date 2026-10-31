@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muzee/localization/app_localizations.dart';
 import 'package:muzee/main.dart' show audioHandler;
@@ -16,7 +17,10 @@ import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/theme/neo/neo_theme.dart';
 import 'package:muzee/widgets/mini_player.dart';
+import 'package:muzee/widgets/now_playing/bottom_actions_row.dart';
 import 'package:muzee/widgets/now_playing/now_playing_controls.dart';
+import 'package:muzee/widgets/now_playing/now_playing_like_button.dart';
+import 'package:muzee/widgets/now_playing/now_playing_more_menu.dart';
 import 'package:muzee/widgets/queue_list_view.dart';
 
 import '../helpers/audio_test_harness.dart';
@@ -117,6 +121,121 @@ void main() {
       await pumpControls(tester);
       expect(find.byTooltip(en.skipToPrevious), findsOneWidget);
       expect(find.byTooltip(en.skipToNext), findsOneWidget);
+    });
+  });
+
+  group('now playing actions', () {
+    IconButton nextButton(WidgetTester tester) => tester.widget<IconButton>(
+      find.ancestor(
+        of: find.byTooltip(en.skipToNext),
+        matching: find.byType(IconButton),
+      ),
+    );
+
+    Future<void> pumpSingleSong(WidgetTester tester) async {
+      await tester.runAsync(() async {
+        await handler.addPlaylistToQueue(buildSongs(1), replace: true);
+        await settle();
+      });
+      await tester.pumpWidget(
+        app(
+          const PlayerControlButtons(
+            metadata: MediaItem(id: 'song_000000', title: 'Song 0'),
+            iconSize: 40,
+            miniIconSize: 24,
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    tearDown(() {
+      playNextSongAutomatically.value = false;
+      handler.clearQueue();
+    });
+
+    testWidgets('next is disabled when there is nothing to skip to', (
+      tester,
+    ) async {
+      playNextSongAutomatically.value = false;
+      await pumpSingleSong(tester);
+      expect(nextButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('next wraps around with repeat all', (tester) async {
+      playNextSongAutomatically.value = false;
+      await pumpSingleSong(tester);
+      repeatNotifier.value = AudioServiceRepeatMode.all;
+      await tester.pump();
+      expect(nextButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('next fetches more songs with autoplay on', (tester) async {
+      playNextSongAutomatically.value = true;
+      await pumpSingleSong(tester);
+      expect(nextButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('bottom actions carry visible labels', (tester) async {
+      await tester.pumpWidget(
+        app(
+          BottomActionsRow(
+            isLargeScreen: false,
+            lyricsController: FlipCardController(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(en.lyrics), findsOneWidget);
+      expect(find.text(en.sleepTimer), findsOneWidget);
+      expect(find.text(en.queue), findsOneWidget);
+      // Like, add to playlist and floating video live elsewhere now.
+      expect(find.byTooltip(en.addToPlaylist), findsNothing);
+      expect(find.byTooltip(en.floatingVideo), findsNothing);
+    });
+
+    testWidgets('the queue action is left out on large screens', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          BottomActionsRow(
+            isLargeScreen: true,
+            lyricsController: FlipCardController(),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text(en.queue), findsNothing);
+    });
+
+    testWidgets('like says what it will do', (tester) async {
+      await tester.pumpWidget(
+        app(const NowPlayingLikeButton(audioId: 'not_liked_id')),
+      );
+      expect(find.byTooltip(en.like), findsOneWidget);
+      expect(find.byTooltip(en.unlike), findsNothing);
+    });
+
+    testWidgets('floating video is offered only for videos', (tester) async {
+      Future<void> openMenu(MediaItem item) async {
+        await tester.pumpWidget(app(NowPlayingMoreMenu(metadata: item)));
+        await tester.tap(find.byTooltip(en.moreOptions));
+        await tester.pumpAndSettle();
+      }
+
+      await openMenu(const MediaItem(id: 'a', title: 'Audio'));
+      expect(find.text(en.addToPlaylist), findsOneWidget);
+      expect(find.text(en.floatingVideo), findsNothing);
+
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+
+      await openMenu(
+        const MediaItem(id: 'v', title: 'Video', extras: {'isVideo': true}),
+      );
+      expect(find.text(en.floatingVideo), findsOneWidget);
     });
   });
 

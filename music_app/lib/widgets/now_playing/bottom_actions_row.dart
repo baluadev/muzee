@@ -1,261 +1,151 @@
-import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
-import 'package:muzee/services/common_services.dart';
-import 'package:muzee/services/pip_service.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/utilities/flutter_toast.dart';
-import 'package:muzee/utilities/playlist_dialogs.dart';
 import 'package:muzee/widgets/queue_list_view.dart';
-import 'package:tuber_playback/tuber_playback.dart';
 
-class BottomActionsRow extends StatefulWidget {
+/// Lyrics · sleep timer · queue, each with a visible label. The queue is left
+/// out on large screens, where it sits beside the player.
+class BottomActionsRow extends StatelessWidget {
   const BottomActionsRow({
     super.key,
-    required this.audioId,
-    required this.metadata,
-    required this.iconSize,
     required this.isLargeScreen,
     required this.lyricsController,
   });
-  final dynamic audioId;
-  final MediaItem metadata;
-  final double iconSize;
   final bool isLargeScreen;
-  final dynamic lyricsController;
-
-  @override
-  State<BottomActionsRow> createState() => _BottomActionsRowState();
-}
-
-class _BottomActionsRowState extends State<BottomActionsRow> {
-  late final ValueNotifier<bool> _songLikeStatus;
-
-  @override
-  void initState() {
-    super.initState();
-    _songLikeStatus = ValueNotifier<bool>(isSongAlreadyLiked(widget.audioId));
-  }
-
-  @override
-  void didUpdateWidget(BottomActionsRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.audioId != widget.audioId) {
-      _songLikeStatus.value = isSongAlreadyLiked(widget.audioId);
-    }
-  }
-
-  @override
-  void dispose() {
-    _songLikeStatus.dispose();
-    super.dispose();
-  }
+  final FlipCardController lyricsController;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n!;
-    final isVideo = widget.metadata.extras?['isVideo'] == true;
-
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final responsiveIconSize = screenWidth < 360
-        ? widget.iconSize * 0.85
-        : widget.iconSize;
 
     return StreamBuilder<List<Map>>(
       stream: audioHandler.queueAsMapStream,
       builder: (context, snapshot) {
-        final queue = snapshot.data ?? [];
-
-        final actions = <Widget>[
-          _buildSimpleActionButton(
-            context: context,
-            icon: FluentIcons.window_multiple_16_regular,
-            colorScheme: colorScheme,
-            size: responsiveIconSize,
-            onPressed: () => _enterPip(context, isVideo: isVideo),
-            tooltip: l10n.floatingVideo,
-          ),
-          _buildSleepTimerButton(context, colorScheme, responsiveIconSize),
-          _buildSimpleActionButton(
-            context: context,
-            icon: FluentIcons.album_add_24_regular,
-            colorScheme: colorScheme,
-            size: responsiveIconSize,
-            onPressed: () => showAddToPlaylistDialog(
-              context,
-              song: mediaItemToMap(widget.metadata),
+        final queue = snapshot.data ?? const [];
+        return Row(
+          children: [
+            Expanded(
+              child: _LabeledAction(
+                icon: FluentIcons.text_quote_24_regular,
+                label: l10n.lyrics,
+                onPressed: offlineMode.value ? null : lyricsController.flipcard,
+              ),
             ),
-            tooltip: l10n.addToPlaylist,
-          ),
-          if (queue.isNotEmpty && !widget.isLargeScreen)
-            _buildSimpleActionButton(
-              context: context,
-              icon: FluentIcons.apps_list_24_filled,
-              colorScheme: colorScheme,
-              size: responsiveIconSize,
-              onPressed: () => _showQueueSheet(context),
-              tooltip: l10n.queue,
+            Expanded(
+              child: ValueListenableBuilder<Duration?>(
+                valueListenable: sleepTimerNotifier,
+                builder: (context, value, _) => _LabeledAction(
+                  icon: FluentIcons.timer_24_regular,
+                  activeIcon: FluentIcons.timer_24_filled,
+                  label: l10n.sleepTimer,
+                  isActive: value != null,
+                  onPressed: () => _onSleepTimerPressed(context, value),
+                ),
+              ),
             ),
-          ...[
-            _buildSimpleActionButton(
-              context: context,
-              icon: FluentIcons.text_quote_24_regular,
-              colorScheme: colorScheme,
-              size: responsiveIconSize,
-              onPressed: widget.lyricsController.flipcard,
-              tooltip: l10n.lyrics,
-            ),
-            _buildActionButton(
-              context: context,
-              icon: FluentIcons.heart_24_regular,
-              activeIcon: FluentIcons.heart_24_filled,
-              colorScheme: colorScheme,
-              size: responsiveIconSize,
-              statusNotifier: _songLikeStatus,
-              activeColor: context.neo.accent,
-              onPressed: () {
-                updateSongLikeStatus(widget.audioId, !_songLikeStatus.value);
-                _songLikeStatus.value = !_songLikeStatus.value;
-              },
-              tooltip: l10n.likedSongs,
-            ),
+            if (!isLargeScreen)
+              Expanded(
+                child: _LabeledAction(
+                  icon: FluentIcons.apps_list_24_regular,
+                  label: l10n.queue,
+                  onPressed: queue.isEmpty
+                      ? null
+                      : () => _showQueueSheet(context),
+                ),
+              ),
           ],
-        ];
-
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: actions,
-          ),
         );
       },
     );
   }
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required IconData activeIcon,
-    required ColorScheme colorScheme,
-    required double size,
-    required ValueNotifier<bool> statusNotifier,
-    required VoidCallback? onPressed,
-    Color? activeColor,
-    String? tooltip,
-  }) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: statusNotifier,
-      builder: (_, isActive, __) {
-        return IconButton(
-          icon: Icon(
-            isActive ? activeIcon : icon,
-            color: isActive
-                ? (activeColor ?? colorScheme.primary)
-                : colorScheme.onSurfaceVariant,
-          ),
-          iconSize: size,
-          tooltip: tooltip,
-          style: IconButton.styleFrom(
-            backgroundColor: isActive
-                ? (activeColor ?? colorScheme.primary).withValues(alpha: 0.15)
-                : Colors.transparent,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: onPressed,
-        );
-      },
-    );
-  }
-
-  Widget _buildSimpleActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required ColorScheme colorScheme,
-    required double size,
-    required VoidCallback onPressed,
-    String? tooltip,
-  }) {
-    return IconButton(
-      icon: Icon(icon, color: colorScheme.onSurfaceVariant),
-      iconSize: size,
-      tooltip: tooltip,
-      style: IconButton.styleFrom(
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: onPressed,
-    );
-  }
-
-  Widget _buildSleepTimerButton(
-    BuildContext context,
-    ColorScheme colorScheme,
-    double size,
-  ) {
-    return ValueListenableBuilder<Duration?>(
-      valueListenable: sleepTimerNotifier,
-      builder: (_, value, __) {
-        final isActive = value != null;
-        return IconButton(
-          icon: Icon(
-            isActive
-                ? FluentIcons.timer_24_filled
-                : FluentIcons.timer_24_regular,
-            color: isActive
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
-          ),
-          iconSize: size,
-          tooltip: context.l10n!.sleepTimer,
-          style: IconButton.styleFrom(
-            backgroundColor: isActive
-                ? colorScheme.primary.withValues(alpha: 0.15)
-                : Colors.transparent,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: () {
-            if (isActive) {
-              audioHandler.cancelSleepTimer();
-              sleepTimerNotifier.value = null;
-              showToast(
-                context,
-                context.l10n!.sleepTimerCancelled,
-                duration: const Duration(seconds: 1, milliseconds: 500),
-              );
-            } else {
-              _showSleepTimerDialog(context);
-            }
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _enterPip(BuildContext context, {required bool isVideo}) async {
-    if (!isVideo) {
-      showToast(context, context.l10n!.floatingVideoVideoOnly);
+  void _onSleepTimerPressed(BuildContext context, Duration? current) {
+    if (current == null) {
+      _showSleepTimerDialog(context);
       return;
     }
+    audioHandler.cancelSleepTimer();
+    sleepTimerNotifier.value = null;
+    showToast(
+      context,
+      context.l10n!.sleepTimerCancelled,
+      duration: const Duration(seconds: 1, milliseconds: 500),
+    );
+  }
+}
 
-    final entered = await PipService.enterImmediatePip();
-    if (!entered && context.mounted) {
-      showToast(context, context.l10n!.floatingVideoUnsupported);
-    }
+/// Icon over a short label. "On" is shown by the filled glyph, the accent
+/// color and the toggled semantics, never color alone.
+class _LabeledAction extends StatelessWidget {
+  const _LabeledAction({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.activeIcon,
+    this.isActive,
+  });
+
+  final IconData icon;
+  final IconData? activeIcon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  /// Null for a plain action, true/false for a toggle.
+  final bool? isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final neo = context.neo;
+    final active = isActive ?? false;
+    final color = onPressed == null
+        ? neo.onSurfaceSubtle
+        : active
+        ? neo.accent
+        : neo.onSurfaceMuted;
+
+    return Tooltip(
+      message: label,
+      excludeFromSemantics: true,
+      child: Semantics(
+        button: true,
+        toggled: isActive,
+        enabled: onPressed != null,
+        label: label,
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(active ? (activeIcon ?? icon) : icon, color: color),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
