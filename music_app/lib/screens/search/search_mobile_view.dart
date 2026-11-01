@@ -2,11 +2,13 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/screens/search/search_controller.dart' as search_ctrl;
+import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/utilities/app_utils.dart';
 import 'package:muzee/widgets/confirmation_dialog.dart';
 import 'package:muzee/widgets/custom_search_bar.dart';
 import 'package:muzee/widgets/load_error_view.dart';
+import 'package:muzee/widgets/monetization/native_ad_tile.dart';
 import 'package:muzee/widgets/playlist_bar.dart';
 import 'package:muzee/widgets/song_bar.dart';
 
@@ -230,8 +232,15 @@ class SearchMobileView extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      itemCount: songs.length,
-      itemBuilder: (context, index) {
+      itemCount: _songsAdSlot.count(songs.length),
+      itemBuilder: (context, row) {
+        if (_songsAdSlot.isAd(row, songs.length)) {
+          return const NativeAdTile(
+            placement: AdNativePlacement.searchResults,
+            padding: EdgeInsets.only(bottom: 8),
+          );
+        }
+        final index = _songsAdSlot.item(row, songs.length);
         final borderRadius = BorderRadius.circular(12);
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -354,3 +363,6 @@ class SearchMobileView extends StatelessWidget {
     );
   }
 }
+
+/// One native ad after the first four song results.
+const _songsAdSlot = InlineAdSlot(4);

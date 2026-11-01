@@ -41,11 +41,12 @@ class LibraryMobileView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const BannerAdWidget(placement: AdBannerPlacement.library),
                 _buildStaticGroup(context),
                 _buildPinnedPlaylistsGroup(context),
                 _buildUserPlaylistsGroup(context),
                 _buildAddedPlaylistsGroup(context),
+                // After the library itself, never in front of it.
+                const BannerAdWidget(placement: AdBannerPlacement.library),
               ],
             ),
           );

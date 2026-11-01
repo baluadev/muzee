@@ -6,6 +6,8 @@ import 'package:hive/hive.dart';
 import 'package:muzee/main.dart' show audioHandler, logger;
 import 'package:muzee/services/common_services.dart';
 import 'package:muzee/services/data_manager.dart';
+import 'package:muzee/services/monetization/ad_placement_gate.dart';
+import 'package:muzee/services/monetization/ads_facade.dart';
 import 'package:muzee/services/settings_manager.dart' as settings;
 import 'package:tuber_playback/tuber_playback.dart';
 
@@ -13,6 +15,27 @@ import 'package:tuber_playback/tuber_playback.dart';
 /// [MuzeePlaybackHost].
 class MusifyAudioHandler extends TuberAudioHandler {
   MusifyAudioHandler({super.player}) : super(host: MuzeePlaybackHost());
+
+  /// Starting a new list (Play on a playlist, a search result, a chart…) is
+  /// the break an interstitial may fill: it shows before the music starts,
+  /// within the limits of [AdPlacementGate.canShowInterstitial].
+  @override
+  Future<void> addPlaylistToQueue(
+    List<Map> songs, {
+    bool replace = false,
+    int? startIndex,
+  }) async {
+    if (replace && songs.isNotEmpty) {
+      await AdsFacade.instance.showInterstitialIfAllowed(
+        AdInterstitialTrigger.startList,
+      );
+    }
+    return super.addPlaylistToQueue(
+      songs,
+      replace: replace,
+      startIndex: startIndex,
+    );
+  }
 }
 
 /// Connects [TuberAudioHandler] to Muzee's settings (Hive `settings` box),

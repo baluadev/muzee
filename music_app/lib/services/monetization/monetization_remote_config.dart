@@ -15,6 +15,13 @@ class MonetizationRemoteConfig {
   static const String _enableBanner = 'remote_enable_banner';
   static const String _enableNative = 'remote_enable_native';
   static const String _enableInterstitial = 'remote_enable_interstitial';
+  static const String _interstitialGraceMinutes =
+      'remote_interstitial_grace_minutes';
+  static const String _interstitialMinIntervalMinutes =
+      'remote_interstitial_min_interval_minutes';
+  static const String _interstitialDailyCap = 'remote_interstitial_daily_cap';
+  static const String _appOpenColdStartWaitSec =
+      'remote_app_open_cold_start_wait_sec';
 
   static Box<dynamic> get _box => Hive.box('monetization');
 
@@ -39,10 +46,30 @@ class MonetizationRemoteConfig {
       _box.get(_enableBanner, defaultValue: true) as bool;
 
   static bool get enableNative =>
-      _box.get(_enableNative, defaultValue: false) as bool;
+      _box.get(_enableNative, defaultValue: true) as bool;
 
   static bool get enableInterstitial =>
       _box.get(_enableInterstitial, defaultValue: true) as bool;
+
+  /// No interstitial this soon after the app starts.
+  static Duration get interstitialGrace => Duration(
+    minutes: _box.get(_interstitialGraceMinutes, defaultValue: 3) as int,
+  );
+
+  /// Least time between two interstitials.
+  static Duration get interstitialMinInterval => Duration(
+    minutes: _box.get(_interstitialMinIntervalMinutes, defaultValue: 5) as int,
+  );
+
+  /// Most interstitials a day.
+  static int get interstitialDailyCap =>
+      _box.get(_interstitialDailyCap, defaultValue: 6) as int;
+
+  /// How long a cold start waits for the App Open ad before going on
+  /// without it.
+  static Duration get appOpenColdStartWait => Duration(
+    seconds: _box.get(_appOpenColdStartWaitSec, defaultValue: 3) as int,
+  );
 
   static Future<void> ensureDefaults() async {
     final b = Hive.box('monetization');
@@ -56,7 +83,11 @@ class MonetizationRemoteConfig {
     putDefault(_appOpenMinBackgroundMinutes, 4);
     putDefault(_appOpenMinIntervalMinutes, 10);
     unawaited(b.put(_enableBanner, true));
-    putDefault(_enableNative, false);
+    unawaited(b.put(_enableNative, true));
+    putDefault(_interstitialGraceMinutes, 3);
+    putDefault(_interstitialMinIntervalMinutes, 5);
+    putDefault(_interstitialDailyCap, 6);
+    putDefault(_appOpenColdStartWaitSec, 3);
     unawaited(b.put(_enableInterstitial, true));
   }
 }

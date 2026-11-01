@@ -4,66 +4,93 @@ import 'package:flutter/widgets.dart';
 
 import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/monetization/ads_facade.dart';
+import 'package:muzee/services/monetization/ads_runtime.dart';
 import 'package:muzee/services/monetization/monetization_remote_config.dart';
 import 'package:muzee/services/monetization/monetization_telemetry.dart';
 import 'package:muzee/services/router_service.dart';
 
-/// Cold start + resume App Open scheduling with timing guards from [MonetizationRemoteConfig].
+/// When the App Open ad may show:
+///
+/// - Cold start ([onColdStart]): not on the first launch after install, and
+///   only if the ad is ready within a few seconds of the first frame; past
+///   that the app goes on without it rather than interrupting later.
+/// - Coming back from the background after at least
+///   [MonetizationRemoteConfig.appOpenMinBackground], spaced by
+///   [MonetizationRemoteConfig.appOpenMinInterval]. A trip out of the app
+///   for another ad (or a short one for a dialog, a picker…) doesn't count.
 class MonetizationLifecycleObserver extends WidgetsBindingObserver {
   DateTime? _pausedAt;
-  DateTime? _lastAppOpenShownAt;
-  bool _coldStartConsumed = false;
+  bool _pausedForAd = false;
+  DateTime? _lastShownAt;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       _pausedAt = DateTime.now();
+      _pausedForAd = AdsFacade.instance.isShowingFullScreen;
       unawaited(AdsFacade.instance.preloadAppOpenIfNeeded());
     } else if (state == AppLifecycleState.resumed) {
       unawaited(_onResumed());
     }
   }
 
-  Future<void> _onResumed() async {
-    final now = DateTime.now();
-    final minBg = MonetizationRemoteConfig.appOpenMinBackground;
-    final minInterval = MonetizationRemoteConfig.appOpenMinInterval;
+  /// Call once the first frame is up.
+  Future<void> onColdStart() async {
+    if (AdsRuntime.isFirstLaunch) {
+      MonetizationTelemetry.appOpenSkipped('first_launch');
+      return;
+    }
+    final deadline = DateTime.now().add(
+      MonetizationRemoteConfig.appOpenColdStartWait,
+    );
+    await AdsRuntime.start();
+    unawaited(AdsFacade.instance.preloadAppOpenIfNeeded());
+    while (!AdsFacade.instance.hasAppOpenLoaded &&
+        DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    if (!AdsFacade.instance.hasAppOpenLoaded) {
+      MonetizationTelemetry.appOpenSkipped('cold_start_late');
+      return;
+    }
+    await _tryShow();
+  }
 
+  Future<void> _onResumed() async {
+    final pausedAt = _pausedAt;
+    final forAd = _pausedForAd;
+    _pausedAt = null;
+    _pausedForAd = false;
+    if (pausedAt == null || forAd) return;
+
+    final now = DateTime.now();
+    if (now.difference(pausedAt) <
+        MonetizationRemoteConfig.appOpenMinBackground) {
+      MonetizationTelemetry.appOpenSkipped('timing');
+      return;
+    }
+    await _tryShow();
+  }
+
+  Future<void> _tryShow() async {
+    final now = DateTime.now();
+    final last = _lastShownAt;
+    if (last != null &&
+        now.difference(last) < MonetizationRemoteConfig.appOpenMinInterval) {
+      MonetizationTelemetry.appOpenSkipped('interval');
+      return;
+    }
     final path =
         NavigationManager.router.routeInformationProvider.value.uri.path;
-
-    final eligibleColdStart = !_coldStartConsumed;
-    final eligibleBg = _pausedAt != null && now.difference(_pausedAt!) >= minBg;
-
-    if (!eligibleColdStart && !eligibleBg) {
-      MonetizationTelemetry.appOpenSkipped('timing');
-      _pausedAt = null;
-      return;
-    }
-
-    if (_lastAppOpenShownAt != null &&
-        now.difference(_lastAppOpenShownAt!) < minInterval) {
-      MonetizationTelemetry.appOpenSkipped('interval');
-      _pausedAt = null;
-      return;
-    }
-
     if (!await AdPlacementGate.canShowAppOpen(matchedLocation: path)) {
       MonetizationTelemetry.appOpenSkipped('gate');
-      _pausedAt = null;
       return;
     }
-
-    await AdsFacade.instance.preloadAppOpenIfNeeded();
-    final shown = await AdsFacade.instance.showAppOpenIfReady();
-    if (shown) {
-      _lastAppOpenShownAt = now;
+    if (await AdsFacade.instance.showAppOpenIfReady()) {
+      _lastShownAt = now;
       MonetizationTelemetry.appOpenShown();
-      if (eligibleColdStart) _coldStartConsumed = true;
     } else {
       MonetizationTelemetry.appOpenSkipped('not_loaded');
     }
-
-    _pausedAt = null;
   }
 }

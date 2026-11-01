@@ -18,8 +18,13 @@ class PipService {
       return false;
     }
 
-    final status = await _floating.pipStatus;
-    return status == PiPStatus.enabled;
+    try {
+      final status = await _floating.pipStatus;
+      return status == PiPStatus.enabled;
+    } catch (_) {
+      // No answer from the platform: treat as not in PiP.
+      return false;
+    }
   }
 
   static Future<bool> enterImmediatePip({

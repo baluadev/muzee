@@ -6,104 +6,145 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:muzee/services/monetization/ad_free_wallet_service.dart';
 import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/monetization/ad_unit_ids.dart';
+import 'package:muzee/services/monetization/ads_runtime.dart';
+import 'package:muzee/services/monetization/entitlement_service.dart';
 
-class BannerAdWidget extends StatefulWidget {
-  const BannerAdWidget({super.key, required this.placement});
-  final AdBannerPlacement placement;
+/// Rebuilds [builder] whenever an ad could start or stop being allowed:
+/// ads becoming ready, Premium, earned ad-free time.
+class AdEligibilityBuilder extends StatelessWidget {
+  const AdEligibilityBuilder({super.key, required this.builder});
+
+  final WidgetBuilder builder;
 
   @override
-  State<BannerAdWidget> createState() => _BannerAdWidgetState();
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([
+      AdsRuntime.ready,
+      EntitlementService.isPremium,
+      AdFreeWalletService.revision,
+    ]),
+    builder: (context, _) => builder(context),
+  );
 }
 
-class _BannerAdWidgetState extends State<BannerAdWidget> {
-  BannerAd? _bannerAd;
-  bool _isLoaded = false;
-  bool _canShow = false;
+/// A banner as wide as its slot (Google's adaptive size for that width),
+/// centred, that takes no room until an ad has loaded and goes away for
+/// Premium or earned ad-free time.
+class BannerAdWidget extends StatelessWidget {
+  const BannerAdWidget({
+    super.key,
+    required this.placement,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  });
+
+  final AdBannerPlacement placement;
+  final EdgeInsets padding;
 
   @override
-  void initState() {
-    super.initState();
-    _checkAndLoadAd();
-    AdFreeWalletService.revision.addListener(_onRevisionChanged);
-  }
+  Widget build(BuildContext context) => AdEligibilityBuilder(
+    builder: (context) => _GatedBanner(
+      // A new key when eligibility may have changed, so the gate is asked
+      // again.
+      key: ValueKey(
+        '${AdsRuntime.ready.value}'
+        '${EntitlementService.isPremium.value}'
+        '${AdFreeWalletService.isAdFreeActive}',
+      ),
+      placement: placement,
+      padding: padding,
+    ),
+  );
+}
+
+class _GatedBanner extends StatefulWidget {
+  const _GatedBanner({
+    super.key,
+    required this.placement,
+    required this.padding,
+  });
+
+  final AdBannerPlacement placement;
+  final EdgeInsets padding;
+
+  @override
+  State<_GatedBanner> createState() => _GatedBannerState();
+}
+
+class _GatedBannerState extends State<_GatedBanner> {
+  BannerAd? _ad;
+  AdSize? _size;
+  int? _requestedWidth;
 
   @override
   void dispose() {
-    AdFreeWalletService.revision.removeListener(_onRevisionChanged);
-    _bannerAd?.dispose();
+    _ad?.dispose();
     super.dispose();
   }
 
-  void _onRevisionChanged() {
-    _checkAndLoadAd();
-  }
-
-  Future<void> _checkAndLoadAd() async {
-    final canShow = await AdPlacementGate.canShowBanner(widget.placement);
-    if (!mounted) return;
-
-    if (canShow && !_isLoaded && _bannerAd == null) {
-      setState(() {
-        _canShow = true;
-      });
-      _loadAd();
-    } else if (!canShow && _isLoaded) {
-      setState(() {
-        _canShow = false;
-        _isLoaded = false;
-      });
-      unawaited(_bannerAd?.dispose());
-      _bannerAd = null;
+  Future<void> _load(int width) async {
+    _requestedWidth = width;
+    if (!await AdPlacementGate.canShowBanner(widget.placement) || !mounted) {
+      return;
     }
-  }
-
-  void _loadAd() {
-    _bannerAd = BannerAd(
+    // A steady height (Google's adaptive banner for this width, never below
+    // 50): inline adaptive banners can come back as thin as 32 dp, too
+    // small to read or to tap on purpose.
+    final size =
+        await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width) ??
+        AdSize.banner;
+    if (!mounted) return;
+    final ad = BannerAd(
       adUnitId: AdUnitIds.banner,
-      size: AdSize.banner,
+      size: size,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          developer.log(
-            'BannerAd loaded for ${widget.placement}',
-            name: 'BannerAdWidget',
-          );
+        onAdLoaded: (ad) async {
+          final banner = ad as BannerAd;
+          final actual = await banner.getPlatformAdSize();
           if (!mounted) {
-            ad.dispose();
+            await banner.dispose();
             return;
           }
           setState(() {
-            _isLoaded = true;
+            _ad = banner;
+            _size = actual ?? size;
           });
         },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+        onAdFailedToLoad: (ad, error) {
           developer.log(
-            'BannerAd failed to load: $error',
+            'Banner (${widget.placement.name}) failed: $error',
             name: 'BannerAdWidget',
           );
           ad.dispose();
-          if (!mounted) return;
-          setState(() {
-            _isLoaded = false;
-            _bannerAd = null;
-          });
         },
       ),
-    )..load();
+    );
+    unawaited(ad.load());
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_canShow || !_isLoaded || _bannerAd == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      alignment: Alignment.center,
-      width: _bannerAd!.size.width.toDouble(),
-      height: _bannerAd!.size.height.toDouble(),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: AdWidget(ad: _bannerAd!),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - widget.padding.horizontal)
+            .floor();
+        if (_requestedWidth == null && width > 0) {
+          unawaited(_load(width));
+        }
+        final ad = _ad;
+        final size = _size;
+        if (ad == null || size == null) return const SizedBox.shrink();
+        return Padding(
+          padding: widget.padding,
+          child: Center(
+            child: SizedBox(
+              width: size.width.toDouble(),
+              height: size.height.toDouble(),
+              child: AdWidget(ad: ad),
+            ),
+          ),
+        );
+      },
     );
   }
 }

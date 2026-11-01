@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/playlist/playlist_controller.dart';
+import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/playlists_manager.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/utilities/app_utils.dart';
 import 'package:muzee/utilities/flutter_toast.dart';
 import 'package:muzee/utilities/playlist_utils.dart';
 import 'package:muzee/widgets/load_error_view.dart';
+import 'package:muzee/widgets/monetization/native_ad_tile.dart';
 import 'package:muzee/widgets/playlist_cube.dart';
 import 'package:muzee/widgets/playlist_page/empty_playlist_state.dart';
 import 'package:muzee/widgets/playlist_page/play_shuffle_buttons.dart';
@@ -61,8 +63,17 @@ class PlaylistMobileView extends StatelessWidget {
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                             sliver: SliverList.builder(
-                              itemCount: sourceList.length,
-                              itemBuilder: (context, index) {
+                              itemCount: _adSlot.count(sourceList.length),
+                              itemBuilder: (context, row) {
+                                if (_adSlot.isAd(row, sourceList.length)) {
+                                  return const NativeAdTile(
+                                    placement: AdNativePlacement.playlist,
+                                  );
+                                }
+                                final index = _adSlot.item(
+                                  row,
+                                  sourceList.length,
+                                );
                                 final isRemovable =
                                     playlist['source'] == 'user-created';
                                 return Padding(
@@ -241,3 +252,6 @@ class PlaylistMobileView extends StatelessWidget {
     );
   }
 }
+
+/// One native ad after the first five songs.
+const _adSlot = InlineAdSlot(5);

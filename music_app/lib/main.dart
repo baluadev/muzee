@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:muzee/extensions/l10n.dart';
@@ -22,6 +21,7 @@ import 'package:muzee/services/legacy/legacy_migration.dart';
 import 'package:muzee/services/logger_service.dart';
 import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/monetization/ads_facade.dart';
+import 'package:muzee/services/monetization/ads_runtime.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
 import 'package:muzee/services/monetization/monetization_lifecycle_observer.dart';
 import 'package:muzee/services/monetization/monetization_remote_config.dart';
@@ -119,6 +119,10 @@ class _MusifyState extends State<Musify> {
     offlineMode.addListener(_onOfflineModeChanged);
 
     WidgetsBinding.instance.addObserver(_monetizationLifecycle);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(AdsRuntime.start());
+      unawaited(_monetizationLifecycle.onColdStart());
+    });
 
     sharingIntentSubscription = ReceiveSharingIntent.getTextStream().listen(
       (String? value) async {
@@ -234,6 +238,7 @@ Future<void> initialisation() async {
     await migrateMuzee1IfNeeded();
 
     await MonetizationRemoteConfig.ensureDefaults();
+    await AdsRuntime.recordLaunch();
     await EntitlementService.loadFromStorage();
 
     await FirebaseService.init();
@@ -253,11 +258,18 @@ Future<void> initialisation() async {
 
     AdPlacementGate.playbackPlayingResolver = () =>
         audioHandler.playbackState.value.playing;
+    AdsFacade.playback = AdPlaybackControl(
+      isPlaying: () => audioHandler.playbackState.value.playing,
+      pause: audioHandler.pause,
+      play: audioHandler.play,
+    );
+    // Ads start after the first frame (consent, then the SDK); full-screen
+    // formats preload once they can.
+    AdsRuntime.ready.addListener(() {
+      if (AdsRuntime.ready.value) AdsFacade.instance.preloadAll();
+    });
 
-    await MobileAds.instance.initialize();
     await PremiumIapService.instance.init();
-    unawaited(AdsFacade.instance.preloadRewarded());
-    unawaited(AdsFacade.instance.preloadAppOpenIfNeeded());
 
     // Init router
     NavigationManager.instance;

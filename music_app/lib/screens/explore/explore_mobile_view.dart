@@ -50,10 +50,11 @@ class ExploreMobileView extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(child: _SearchField(onTap: onSearchTap)),
+        SliverToBoxAdapter(child: _buildTrendingArtists(context)),
+        // Below the first section, clear of the search field.
         const SliverToBoxAdapter(
           child: BannerAdWidget(placement: AdBannerPlacement.search),
         ),
-        SliverToBoxAdapter(child: _buildTrendingArtists(context)),
         SliverToBoxAdapter(child: _buildTopSongs(context)),
         const BrowseAllMoods(),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
