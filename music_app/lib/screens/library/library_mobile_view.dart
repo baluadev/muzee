@@ -9,6 +9,7 @@ import 'package:muzee/utilities/async_loader.dart';
 import 'package:muzee/widgets/confirmation_dialog.dart';
 import 'package:muzee/widgets/monetization/banner_ad_widget.dart';
 import 'package:muzee/widgets/muzee_artwork.dart';
+import 'package:muzee/widgets/page_title.dart';
 import 'package:muzee/widgets/section_header.dart';
 
 class LibraryMobileView extends StatelessWidget {
@@ -19,39 +20,45 @@ class LibraryMobileView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n!;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.library,
-          style: Theme.of(context).textTheme.headlineLarge,
-        ),
-        actions: [
-          IconButton(
-            tooltip: l10n.createNew,
-            icon: const Icon(FluentIcons.add_24_regular),
-            onPressed: () => _showCreateSheet(context),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: AnimatedBuilder(
-        animation: controller.multiListenable,
-        builder: (context, _) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStaticGroup(context),
-                _buildPinnedPlaylistsGroup(context),
-                _buildUserPlaylistsGroup(context),
-                _buildAddedPlaylistsGroup(context),
-                // After the library itself, never in front of it.
-                const BannerAdWidget(placement: AdBannerPlacement.library),
-              ],
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PageTitle(
+              l10n.library,
+              trailing: IconButton(
+                tooltip: l10n.createNew,
+                icon: const Icon(FluentIcons.add_24_regular),
+                onPressed: () => _showCreateSheet(context),
+              ),
             ),
-          );
-        },
+            Expanded(child: _buildBody(context)),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller.multiListenable,
+      builder: (context, _) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStaticGroup(context),
+              _buildPinnedPlaylistsGroup(context),
+              _buildUserPlaylistsGroup(context),
+              _buildAddedPlaylistsGroup(context),
+              // After the library itself, never in front of it.
+              const BannerAdWidget(placement: AdBannerPlacement.library),
+            ],
+          ),
+        );
+      },
     );
   }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="push_channel_id" translatable="false">muzee_updates</string>
+    <string name="push_channel_name">Suggestions and news</string>
+    <string name="push_channel_description">Songs picked for you and new releases from Muzee.</string>
+</resources>

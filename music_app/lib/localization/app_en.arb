@@ -435,5 +435,32 @@
     }
   },
   "personalizeWithYouTube": "Personalise with YouTube",
-  "personalizeWithYouTubeDescription": "Use your YouTube likes and subscriptions to pick songs you'll like. Kept on this device only."
+  "personalizeWithYouTubeDescription": "Use your YouTube likes and subscriptions to pick songs you'll like. Kept on this device only.",
+  "reminderTitleSong": "Miss {artist}?",
+  "@reminderTitleSong": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderBodySong": "Pick up where you left off: {title}.",
+  "@reminderBodySong": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderTitle": "Your music is waiting",
+  "reminderBody": "Fresh songs and playlists picked for you. Tap to listen.",
+  "reminderTitleLater": "It's been a while",
+  "reminderBodyLater": "Come back to the music you love, picked just for you.",
+  "listeningReminders": "Listening reminders",
+  "listeningRemindersDescription": "A gentle nudge after a couple of days without music.",
+  "appearance": "Appearance",
+  "appearanceSystem": "Match system",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark",
+  "appearanceBlack": "Pure black"
 }

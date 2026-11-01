@@ -1,6 +1,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
+import 'package:muzee/widgets/muzee_artwork.dart';
 import 'package:muzee/widgets/playlist_artwork.dart';
 
 class PlaylistCube extends StatelessWidget {
@@ -23,18 +24,44 @@ class PlaylistCube extends StatelessWidget {
 
   static const double typeLabelOffset = 10;
 
+  /// The first song of [playlist], when it has songs: its artwork stands in
+  /// for a playlist or album that has no cover of its own.
+  Map? get _firstSong {
+    final songs = playlist['list'];
+    if (songs is! List) return null;
+    for (final song in songs) {
+      if (song is Map) return song;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cover = playlist['image']?.toString();
+    final firstSong = cover == null ? _firstSong : null;
+    final firstSongArt = (firstSong?['highResImage'] ?? firstSong?['image'])
+        ?.toString();
     return Material(
       borderRadius: BorderRadius.circular(borderRadius),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          PlaylistArtwork(
-            playlistArtwork: playlist['image'],
-            size: size,
-            cubeIcon: cubeIcon,
-          ),
+          if (cover == null && firstSongArt != null)
+            // MuzeeArtwork steps down to smaller thumbnails for old videos.
+            MuzeeArtwork(
+              url: firstSongArt,
+              width: size,
+              height: size,
+              borderRadius: 0,
+              iconSize: size * 0.3,
+              fallbackIcon: cubeIcon,
+            )
+          else
+            PlaylistArtwork(
+              playlistArtwork: cover,
+              size: size,
+              cubeIcon: cubeIcon,
+            ),
           if (showTypeLabel && playlist['image'] != null)
             Positioned(
               top: typeLabelOffset,

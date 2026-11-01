@@ -8,6 +8,7 @@ import 'package:muzee/utilities/async_loader.dart';
 import 'package:muzee/widgets/monetization/banner_ad_widget.dart';
 import 'package:muzee/widgets/moods.dart';
 import 'package:muzee/widgets/muzee_artwork.dart';
+import 'package:muzee/widgets/page_title.dart';
 import 'package:muzee/widgets/shimmer_skeletons.dart';
 import 'package:muzee/widgets/song_bar.dart';
 import 'package:youtube_charts/youtube_charts.dart';
@@ -37,17 +38,7 @@ class ExploreMobileView extends StatelessWidget {
       slivers: [
         SliverSafeArea(
           bottom: false,
-          sliver: SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Text(
-                l10n.search,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
+          sliver: SliverToBoxAdapter(child: PageTitle(l10n.search)),
         ),
         SliverToBoxAdapter(child: _SearchField(onTap: onSearchTap)),
         SliverToBoxAdapter(child: _buildTrendingArtists(context)),

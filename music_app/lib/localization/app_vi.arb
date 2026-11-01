@@ -386,5 +386,18 @@
   "seekBackSeconds": "Lùi {seconds} giây",
   "seekForwardSeconds": "Tiến {seconds} giây",
   "personalizeWithYouTube": "Cá nhân hóa theo YouTube",
-  "personalizeWithYouTubeDescription": "Dùng lượt thích và kênh đăng ký YouTube của bạn để chọn bài hợp gu. Chỉ lưu trên máy này."
+  "personalizeWithYouTubeDescription": "Dùng lượt thích và kênh đăng ký YouTube của bạn để chọn bài hợp gu. Chỉ lưu trên máy này.",
+  "reminderTitleSong": "Nhớ {artist} không?",
+  "reminderBodySong": "Nghe tiếp nhé: {title}.",
+  "reminderTitle": "Nhạc của bạn đang chờ",
+  "reminderBody": "Bài hát và playlist mới chọn riêng cho bạn. Chạm để nghe.",
+  "reminderTitleLater": "Lâu rồi không gặp",
+  "reminderBodyLater": "Quay lại với những bài bạn yêu thích nhé.",
+  "listeningReminders": "Nhắc nghe nhạc",
+  "listeningRemindersDescription": "Nhắc nhẹ khi bạn vài ngày chưa nghe nhạc.",
+  "appearance": "Giao diện",
+  "appearanceSystem": "Theo hệ thống",
+  "appearanceLight": "Sáng",
+  "appearanceDark": "Tối",
+  "appearanceBlack": "Đen tuyền"
 }

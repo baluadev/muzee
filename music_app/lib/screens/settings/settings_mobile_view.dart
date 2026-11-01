@@ -6,7 +6,9 @@ import 'package:muzee/constants/version.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/settings/settings_controller.dart';
+import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
+import 'package:muzee/services/reminder_service.dart';
 import 'package:muzee/services/router_service.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
@@ -124,6 +126,15 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             onTap: () => widget.controller.showCountryPicker(context),
           ),
         ),
+        ValueListenableBuilder<AppAppearance>(
+          valueListenable: appearanceSetting,
+          builder: (context, appearance, _) => TubifySettingsTile(
+            title: l10n.appearance,
+            icon: FluentIcons.dark_theme_24_regular,
+            trailingText: appearanceName(l10n, appearance),
+            onTap: () => widget.controller.showAppearancePicker(context),
+          ),
+        ),
         TubifySettingsTile(
           title: l10n.language,
           icon: FluentIcons.local_language_24_regular,
@@ -132,6 +143,18 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             Localizations.localeOf(context).languageCode,
           ),
           onTap: () => widget.controller.showLanguagePicker(context),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: listeningReminders,
+          builder: (_, value, __) => TubifySettingsTile(
+            title: l10n.listeningReminders,
+            subtitle: l10n.listeningRemindersDescription,
+            icon: FluentIcons.alert_24_regular,
+            trailing: _switch(value, (value) {
+              listeningReminders.value = value;
+              addOrUpdateData('settings', 'listeningReminders', value);
+            }),
+          ),
         ),
       ],
     );

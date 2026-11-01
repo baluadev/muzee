@@ -4,12 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:muzee/constants/app_constants.dart';
 import 'package:muzee/extensions/l10n.dart';
+import 'package:muzee/localization/app_localizations.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/search/search_controller.dart';
 import 'package:muzee/services/common_services.dart';
 import 'package:muzee/services/data_manager.dart';
+import 'package:muzee/services/firebase/push_service.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
 import 'package:muzee/services/settings_manager.dart';
+import 'package:muzee/theme/app_themes.dart';
 import 'package:muzee/utilities/flutter_bottom_sheet.dart';
 import 'package:muzee/utilities/flutter_toast.dart';
 import 'package:muzee/utilities/language_utils.dart';
@@ -60,6 +63,31 @@ class SettingsController {
     );
   }
 
+  void showAppearancePicker(BuildContext context) {
+    final l10n = context.l10n!;
+    final current = appearanceSetting.value;
+    showCustomBottomSheet(
+      context,
+      ListView(
+        shrinkWrap: true,
+        physics: const BouncingScrollPhysics(),
+        padding: commonListViewBottomPadding,
+        children: [
+          for (final appearance in AppAppearance.values)
+            BottomSheetBar(appearanceName(l10n, appearance), () {
+              appearanceSetting.value = appearance;
+              addOrUpdateData('settings', 'appearance', appearance.name);
+              Musify.updateAppState(
+                context,
+                newThemeMode: themeModeFor(appearance),
+              );
+              Navigator.pop(context);
+            }, appearance == current),
+        ],
+      ),
+    );
+  }
+
   void showLanguagePicker(BuildContext context) {
     final availableLanguages = appLanguages.toList();
     final activeLanguageCode = Localizations.localeOf(context).languageCode;
@@ -87,6 +115,8 @@ class SettingsController {
             () {
               addOrUpdateData('settings', 'languageCode', newLocaleFullCode);
               Musify.updateAppState(context, newLocale: newLocale);
+              languageSetting = newLocale;
+              PushService.instance.onLanguageChanged();
               showToast(context, context.l10n!.languageMsg);
               Navigator.pop(context);
             },
@@ -234,3 +264,12 @@ class SettingsController {
     );
   }
 }
+
+/// [appearance] as shown in Settings.
+String appearanceName(AppLocalizations l10n, AppAppearance appearance) =>
+    switch (appearance) {
+      AppAppearance.system => l10n.appearanceSystem,
+      AppAppearance.light => l10n.appearanceLight,
+      AppAppearance.dark => l10n.appearanceDark,
+      AppAppearance.black => l10n.appearanceBlack,
+    };

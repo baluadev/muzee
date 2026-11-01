@@ -28,6 +28,7 @@ import 'package:muzee/services/monetization/monetization_remote_config.dart';
 import 'package:muzee/services/monetization/premium_iap_service.dart';
 import 'package:muzee/services/playlist_sharing.dart';
 import 'package:muzee/services/playlists_manager.dart';
+import 'package:muzee/services/reminder_service.dart';
 import 'package:muzee/services/router_service.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/services/youtube_taste_sync.dart';
@@ -39,6 +40,7 @@ import 'package:muzee/utilities/language_utils.dart';
 import 'package:muzee/utilities/playlist_utils.dart';
 import 'package:muzee/utilities/sharing_intent.dart';
 import 'package:muzee/widgets/muzee_artwork.dart';
+import 'package:muzee/widgets/splash_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -162,11 +164,10 @@ class _MusifyState extends State<Musify> {
 
   @override
   Widget build(BuildContext context) {
-    // Muzee Mono: dark by default; the light palette is ready for when the
-    // theme setting comes back (themeMode in theme/app_themes.dart).
+    // Settings → Appearance: system, light, dark (default) or pure black.
     final darkVariant = NeoThemeVariant.resolve(
       brightness: Brightness.dark,
-      pureBlack: usePureBlackColor.value,
+      pureBlack: appearanceSetting.value == AppAppearance.black,
     );
     final icons = brightness == Brightness.light
         ? Brightness.dark
@@ -186,6 +187,7 @@ class _MusifyState extends State<Musify> {
         systemNavigationBarIconBrightness: icons,
       ),
       child: MaterialApp.router(
+        scaffoldMessengerKey: rootScaffoldMessengerKey,
         themeMode: themeMode,
         darkTheme: buildNeoTheme(
           darkVariant,
@@ -217,9 +219,10 @@ void main() async {
   registerNeoFontLicenses();
   MediaKit.ensureInitialized();
   ArtworkRetry.install();
-  await initialisation();
 
-  runApp(const Musify());
+  // The first frame comes at once (an animated splash) while storage,
+  // Firebase and the player start; the app fades in when they're ready.
+  runApp(AppStartup(ready: initialisation(), app: const Musify()));
 }
 
 Future<void> initialisation() async {
@@ -275,6 +278,7 @@ Future<void> initialisation() async {
     NavigationManager.instance;
     AnalyticsService.trackScreens(NavigationManager.router);
     PushService.instance.requestPermissionAfterIntro(NavigationManager.router);
+    unawaited(ReminderService.instance.init());
 
     try {
       // Listen to incoming links while app is running

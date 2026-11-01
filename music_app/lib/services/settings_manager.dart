@@ -63,8 +63,13 @@ Locale languageSetting = getLocaleFromLanguageCode(
       as String,
 );
 
-final themeModeSetting =
-    Hive.box('settings').get('themeIndex', defaultValue: 0) as int;
+/// The app's look (Settings → Appearance). Dark is the default.
+enum AppAppearance { system, light, dark, black }
+
+final appearanceSetting = ValueNotifier<AppAppearance>(
+  AppAppearance.values.asNameMap()[Hive.box('settings').get('appearance')] ??
+      AppAppearance.dark,
+);
 
 String playlistSortSetting = Hive.box(
   'settings',

@@ -6,7 +6,7 @@ import 'package:muzee/theme/neo/neo_typography.dart';
 import 'package:muzee/theme/tubify_color_schemes.dart';
 import 'package:muzee/theme/tubify_tokens.dart';
 
-ThemeMode themeMode = getThemeMode(themeModeSetting);
+ThemeMode themeMode = themeModeFor(appearanceSetting.value);
 Brightness brightness = getBrightnessFromThemeMode(themeMode);
 
 PageTransitionsBuilder transitionsBuilder = predictiveBack.value
@@ -24,9 +24,12 @@ Brightness getBrightnessFromThemeMode(ThemeMode themeMode) {
   return themeBrightnessMapping[themeMode] ?? Brightness.dark;
 }
 
-ThemeMode getThemeMode(int themeModeIndex) {
-  return ThemeMode.dark;
-}
+/// The Material theme mode for [appearance] (pure black is a dark mode).
+ThemeMode themeModeFor(AppAppearance appearance) => switch (appearance) {
+  AppAppearance.system => ThemeMode.system,
+  AppAppearance.light => ThemeMode.light,
+  AppAppearance.dark || AppAppearance.black => ThemeMode.dark,
+};
 
 /// Material You surfaces can follow the wallpaper; Tubify keeps accent `#ABD600`.
 ColorScheme tubifyBrandPrimaryOverlay(ColorScheme scheme) {
