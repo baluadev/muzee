@@ -407,5 +407,6 @@
   "sleepTimerStopsAt": "Nhạc sẽ dừng lúc {time}",
   "sleepTimerStopsAfterSong": "Nhạc sẽ dừng khi hết bài này",
   "sleepTimerRemaining": "Còn {time}",
-  "sleepTimerHint": "Nhạc sẽ tạm dừng khi hết giờ."
+  "sleepTimerHint": "Nhạc sẽ tạm dừng khi hết giờ.",
+  "enterFullscreen": "Toàn màn hình"
 }

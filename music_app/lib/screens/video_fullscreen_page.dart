@@ -80,10 +80,9 @@ class _VideoFullscreenPageState extends State<VideoFullscreenPage> {
   }
 
   Future<void> _restoreSystemMode() async {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    // Back to whatever the device allows (an empty list): forcing portrait
+    // here would lock the whole app in portrait afterwards.
+    await SystemChrome.setPreferredOrientations(const []);
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 

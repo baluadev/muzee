@@ -6,7 +6,6 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/now_playing_route.dart';
-import 'package:muzee/screens/video_fullscreen_page.dart';
 import 'package:muzee/services/common_services.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/utilities/async_loader.dart';
@@ -24,8 +23,13 @@ class NowPlayingPreview extends InheritedWidget {
   bool updateShouldNotify(NowPlayingPreview oldWidget) => false;
 }
 
-/// Side margin of the portrait player's artwork.
-const portraitArtworkMargin = 24.0;
+/// Side margin of the portrait player's artwork: none, the video uses the
+/// screen's full width (as large as a 16:9 picture can be on a phone).
+const portraitArtworkMargin = 0.0;
+
+/// The video the player shows, for its full-screen button (null when the
+/// current item isn't a video).
+final nowPlayingVideoController = ValueNotifier<VideoController?>(null);
 
 class NowPlayingArtwork extends StatelessWidget {
   const NowPlayingArtwork({
@@ -44,23 +48,31 @@ class NowPlayingArtwork extends StatelessWidget {
     final screenWidth = size.width;
     final screenHeight = size.height;
     final isLandscape = screenWidth > screenHeight;
-    final isDesktop = screenWidth > 800;
+    // Wide and tall: a phone on its side is wide but not desktop.
+    final isDesktop = screenWidth > 800 && screenHeight > 600;
     // Portrait: the page's width (less its 24 dp side margins) at 16:9,
     // the shape of YouTube videos and thumbnails, so nothing is letterboxed
     // and the full-screen button sits on the picture's corner.
+    // Landscape phone: 16:9 in the left pane (about 42% of the width),
+    // no taller than 60% of the screen.
+    final landscapeHeight = [
+      screenWidth * 0.42 * 9 / 16,
+      screenHeight * 0.6,
+    ].reduce((a, b) => a < b ? a : b);
     final imageWidth = isDesktop
         ? screenHeight * 0.50
         : isLandscape
-        ? screenHeight * 0.65
+        ? landscapeHeight * 16 / 9
         : screenWidth - 2 * portraitArtworkMargin;
 
     final imageHeight = isDesktop
         ? screenHeight * 0.50
         : isLandscape
-        ? screenHeight * 0.65
+        ? landscapeHeight
         : imageWidth * 9 / 16;
 
-    const borderRadius = 16.0;
+    // Edge to edge in portrait; a rounded card elsewhere.
+    final borderRadius = isLandscape || isDesktop ? 16.0 : 0.0;
     final preview = NowPlayingPreview.of(context);
 
     return FlipCard(
@@ -84,14 +96,17 @@ class NowPlayingArtwork extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withValues(alpha: 0.15),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 2,
-                ),
-              ],
+              // A card off the screen's edges casts a shadow; edge to edge doesn't.
+              boxShadow: borderRadius == 0
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: colorScheme.shadow.withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                        spreadRadius: 2,
+                      ),
+                    ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(borderRadius),
@@ -120,14 +135,16 @@ class NowPlayingArtwork extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.secondaryContainer,
           borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            ),
-          ],
+          boxShadow: borderRadius == 0
+              ? null
+              : [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 2,
+                  ),
+                ],
         ),
         child: AsyncLoader<String?>(
           future: getSongLyrics(
@@ -256,6 +273,25 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
     }
   }
 
+  /// Shares the current controller with the full-screen button (after this
+  /// frame: it may be called during build).
+  void _publish() {
+    final controller = _videoController;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _videoController == controller) {
+        nowPlayingVideoController.value = controller;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    if (nowPlayingVideoController.value == _videoController) {
+      nowPlayingVideoController.value = null;
+    }
+    super.dispose();
+  }
+
   void _initVideoController({bool forceRecreate = false}) {
     if (!_isVideo) {
       if (_videoController != null && mounted) {
@@ -263,10 +299,12 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
           _videoController = null;
           _videoRenderKey = null;
         });
+        _publish();
         return;
       }
       _videoController = null;
       _videoRenderKey = null;
+      _publish();
       return;
     }
 
@@ -290,6 +328,7 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
         _videoController = controller;
         _videoRenderKey = nextKey;
       }
+      _publish();
     }
   }
 
@@ -312,35 +351,6 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
               pauseUponEnteringBackgroundMode: false,
               controls: NoVideoControls,
               fill: Colors.transparent,
-            ),
-          ),
-          Positioned(
-            right: 10,
-            bottom: 10,
-            child: Material(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(999),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(999),
-                onTap: () async {
-                  final controller = _videoController;
-                  if (controller == null) return;
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          VideoFullscreenPage(controller: controller),
-                    ),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Icon(
-                    FluentIcons.full_screen_maximize_24_regular,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
             ),
           ),
         ],

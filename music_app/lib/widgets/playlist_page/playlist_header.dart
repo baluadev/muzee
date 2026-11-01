@@ -40,8 +40,13 @@ class PlaylistHeader extends StatelessWidget {
         children: [
           Center(
             child: ConstrainedBox(
-              // Leaves the title and Play button above the fold on phones.
-              constraints: const BoxConstraints(maxWidth: 260),
+              // Leaves the title and Play button above the fold on phones,
+              // upright or sideways.
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).height * 0.45 < 260
+                    ? MediaQuery.sizeOf(context).height * 0.45
+                    : 260,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 // Centred: an image smaller than the box would otherwise sit

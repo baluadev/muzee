@@ -491,5 +491,6 @@
       }
     }
   },
-  "sleepTimerHint": "Music pauses when the timer ends."
+  "sleepTimerHint": "Music pauses when the timer ends.",
+  "enterFullscreen": "Full screen"
 }

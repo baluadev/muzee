@@ -31,7 +31,7 @@ class NowPlayingControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = size.width > 800;
+    final isDesktop = size.width > 800 && size.height > 600;
 
     return LayoutBuilder(
       builder: (context, constraints) {

@@ -34,7 +34,11 @@ class SongArtworkWidget extends StatelessWidget {
             ),
           )
         : MuzeeArtwork(
-            url: metadata.artUri?.toString(),
+            // In the app, the sharpest thumbnail (it steps down by itself
+            // when missing); artUri is the notification's smaller one.
+            url:
+                metadata.extras?['highResImage']?.toString() ??
+                metadata.artUri?.toString(),
             width: size,
             height: height ?? size,
             borderRadius: borderRadius,

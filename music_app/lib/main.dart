@@ -258,6 +258,12 @@ Future<void> initialisation() async {
         androidNotificationIcon: 'mipmap/ic_stat_ic_launcher',
         androidShowNotificationBadge: true,
         androidStopForegroundOnPause: false,
+        // Artwork reaches the media session and notification as a bitmap.
+        // Full-size YouTube thumbnails (1280×720, ~3.6 MB) are dropped by
+        // some systems (Samsung's media player among them); 512 px is
+        // plenty for any notification, lock screen or car display.
+        artDownscaleWidth: 512,
+        artDownscaleHeight: 512,
       ),
     );
 

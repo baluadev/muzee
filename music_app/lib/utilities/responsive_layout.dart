@@ -27,7 +27,11 @@ class ResponsiveLayout extends StatelessWidget {
       builder: (context, constraints) {
         if (constraints.maxWidth >= 1100 && desktop != null) {
           return desktop!;
-        } else if (constraints.maxWidth >= 600 && tablet != null) {
+        } else if (constraints.maxWidth >= 600 &&
+            // A phone turned sideways is wide but short: it keeps the
+            // phone layouts (the tablet ones assume room both ways).
+            MediaQuery.sizeOf(context).shortestSide >= 600 &&
+            tablet != null) {
           return tablet!;
         } else {
           return mobile;

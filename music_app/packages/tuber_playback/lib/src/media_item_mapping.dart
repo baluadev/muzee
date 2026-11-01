@@ -28,7 +28,7 @@ MediaItem mapToMediaItem(
 
   final artUri = isOffline && offlineSong['artworkPath'] != null
       ? Uri.file(offlineSong['artworkPath'].toString())
-      : Uri.parse(song['highResImage'].toString());
+      : Uri.parse(notificationArtwork(song['highResImage'].toString()));
 
   return MediaItem(
     id: song['id'].toString(),
@@ -63,4 +63,20 @@ bool durationEquals(Duration? prev, Duration? curr) {
 
   // Consider durations equal if they differ by less than 1 second
   return (prev - curr).abs() < const Duration(seconds: 1);
+}
+
+final _youTubeThumbnail = RegExp(
+  r'^(https?://(?:i\d?\.ytimg\.com|img\.youtube\.com)/vi(?:_webp)?/[^/]+/)'
+  r'(?:maxresdefault|sddefault)(\.\w+)$',
+);
+
+/// The artwork URL for the media notification and lock screen. YouTube's
+/// maxres and sd thumbnails are missing for many older videos, and there
+/// the notification has no fallback: use hqdefault (480×360), which every
+/// video has and which is plenty once downscaled for the notification.
+/// Other URLs are kept.
+String notificationArtwork(String url) {
+  final match = _youTubeThumbnail.firstMatch(url);
+  if (match == null) return url;
+  return '${match.group(1)}hqdefault${match.group(2)}';
 }

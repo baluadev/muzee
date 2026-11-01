@@ -4,8 +4,10 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:muzee/design_system/components/neo_icon_button.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
+import 'package:muzee/screens/video_fullscreen_page.dart';
 import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/monetization/ui_route_flags.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
@@ -184,6 +186,23 @@ class _TitleBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
+        // Full screen sits with the song's other actions, off the picture.
+        ValueListenableBuilder<VideoController?>(
+          valueListenable: nowPlayingVideoController,
+          builder: (context, controller, _) =>
+              controller == null || metadata.extras?['isVideo'] != true
+              ? const SizedBox.shrink()
+              : NeoIconButton(
+                  icon: FluentIcons.full_screen_maximize_24_regular,
+                  tooltip: context.l10n!.enterFullscreen,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          VideoFullscreenPage(controller: controller),
+                    ),
+                  ),
+                ),
+        ),
         NowPlayingLikeButton(audioId: metadata.extras?['ytid']),
       ],
     );
@@ -330,15 +349,10 @@ class _MobileLayout extends StatelessWidget {
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
               ),
             const Spacer(),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: portraitArtworkMargin,
-              ),
-              child: NowPlayingArtwork(
-                size: size,
-                metadata: metadata,
-                lyricsController: lyricsController,
-              ),
+            NowPlayingArtwork(
+              size: size,
+              metadata: metadata,
+              lyricsController: lyricsController,
             ),
             const SizedBox(height: 28),
             Padding(

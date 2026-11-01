@@ -101,9 +101,14 @@ class _GatedBannerState extends State<_GatedBanner> {
         onAdLoaded: (ad) async {
           final banner = ad as BannerAd;
           final actual = await banner.getPlatformAdSize();
-          if (!mounted) {
+          // Gone, or loaded for a width the slot no longer has.
+          if (!mounted || _requestedWidth != width) {
             await banner.dispose();
             return;
+          }
+          final previous = _ad;
+          if (previous != null && previous != banner) {
+            unawaited(previous.dispose());
           }
           setState(() {
             _ad = banner;
@@ -128,8 +133,22 @@ class _GatedBannerState extends State<_GatedBanner> {
       builder: (context, constraints) {
         final width = (constraints.maxWidth - widget.padding.horizontal)
             .floor();
-        if (_requestedWidth == null && width > 0) {
-          unawaited(_load(width));
+        if (width > 0 && _requestedWidth != width) {
+          // First layout, or the slot changed width (the phone turned):
+          // load a banner sized for it, after this frame.
+          final old = _ad;
+          _requestedWidth = width;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (old != null) {
+              setState(() {
+                _ad = null;
+                _size = null;
+              });
+              unawaited(old.dispose());
+            }
+            unawaited(_load(width));
+          });
         }
         final ad = _ad;
         final size = _size;
