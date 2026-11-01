@@ -321,6 +321,35 @@ void main() {
       },
     );
 
+    test('a song that runs to the end is reported as completed', () async {
+      await start(buildSongs(2));
+
+      await finishTrack();
+
+      expect(host.playEnds, [(songId(0), true)]);
+    });
+
+    test('skipping or stopping reports the song as not completed', () async {
+      await start(buildSongs(3));
+
+      await handler.skipToNext();
+      await settle();
+      await handler.stop();
+
+      expect(host.playEnds, [(songId(0), false), (songId(1), false)]);
+    });
+
+    test('autoplay leaves a queue with songs still to come alone', () async {
+      host
+        ..offlineMode.value = false
+        ..playNextAutomatically.value = true
+        ..similar = buildSongs(8).last;
+
+      await start(buildSongs(3));
+
+      expect(queueIds(), [songId(0), songId(1), songId(2)]);
+    });
+
     test('playing a song again counts a listen', () async {
       await start(buildSongs(1));
 

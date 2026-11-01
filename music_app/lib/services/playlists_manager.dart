@@ -7,8 +7,7 @@ import 'package:muzee/database/playlists.db.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart' show logger;
 import 'package:muzee/services/data_manager.dart';
-import 'package:muzee/services/proxy_manager.dart';
-import 'package:muzee/services/settings_manager.dart';
+import 'package:muzee/services/youtube_client.dart';
 import 'package:muzee/utilities/app_utils.dart';
 import 'package:muzee/utilities/flutter_toast.dart';
 import 'package:muzee/utilities/formatter.dart';
@@ -726,28 +725,7 @@ Future<List> getPlaylists({
         error: e,
         stackTrace: st,
       );
-      if (useProxy.value) {
-        final proxyYt = await ProxyManager().getYoutubeExplodeClient();
-        if (proxyYt != null) {
-          try {
-            searchResultsIterable = await proxyYt.search.searchContent(
-              searchTerm,
-              filter: TypeFilters.playlist,
-            );
-          } catch (e2, st2) {
-            logger.log('Proxy search failed:', error: e2, stackTrace: st2);
-            searchResultsIterable = <dynamic>[];
-          } finally {
-            try {
-              proxyYt.close();
-            } catch (_) {}
-          }
-        } else {
-          searchResultsIterable = <dynamic>[];
-        }
-      } else {
-        searchResultsIterable = <dynamic>[];
-      }
+      searchResultsIterable = <dynamic>[];
     }
 
     final existingYtIds = onlinePlaylists.value

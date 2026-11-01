@@ -97,7 +97,11 @@ class HomeMobileView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final width = (constraints.maxWidth - 8) / 2;
+                  // Zero-width first frames (e.g. screen off) go negative.
+                  final width = ((constraints.maxWidth - 8) / 2).clamp(
+                    0.0,
+                    double.infinity,
+                  );
                   return Wrap(
                     spacing: 8,
                     runSpacing: 8,

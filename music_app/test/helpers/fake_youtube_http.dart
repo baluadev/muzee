@@ -1,7 +1,7 @@
 // Test-only fake of the network layer underneath youtube_explode_dart.
 //
 // The app talks to YouTube through the global `ytClient`
-// (lib/services/proxy_manager.dart), which is created lazily with a plain
+// (lib/services/youtube_client.dart), which is created lazily with a plain
 // `http.Client()` -> dart:io `HttpClient()`. Installing [FakeYouTubeHttp] as
 // `HttpOverrides.global` before the first request therefore routes every
 // YouTube call through [FakeYouTubeHttp.responder] without touching lib/.

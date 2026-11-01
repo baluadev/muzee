@@ -236,8 +236,6 @@
   "understand": "Anlıyorum",
   "undo": "Geri Al",
   "update": "Güncelleme",
-  "useProxy": "Proxy kullan",
-  "useProxyDescription": "Yalnızca bağlantı sorunları olduğunda proxy kullanın, gereksiz kullanım müzik oynatmayı bir ihtimal bozabilir.",
   "userPlaylists": "Kullanıcı Listeleri",
   "yes": "Evet",
   "youtubePlaylistLinkOrId": "YouTube listesi bağlantısı veya ID'si",

@@ -19,7 +19,7 @@
   "appUpdateIsAvailable": "An update is available",
   "artist": "Artist",
   "automaticSongPicker": "Autoplay similar songs",
-  "automaticSongPickerDescription": "Automatically play a random song after the current track ends.",
+  "automaticSongPickerDescription": "When the queue runs out, keep playing songs similar to the last one.",
   "back": "Back",
   "backToFavorites": "Back to favorites",
   "backedupSuccess": "Data successfully backed up",
@@ -79,8 +79,8 @@
   "equalizerPresets": "Presets",
   "equalizerBands": "Bands",
   "error": "An error occurred. Check logs or try again.",
-  "externalRecommendations": "External recommendations",
-  "externalRecommendationsDescription": "Use the external algorithm for recommendations instead of Muzee’s own.",
+  "externalRecommendations": "YouTube Music radio",
+  "externalRecommendationsDescription": "Autoplay picks songs from YouTube Music's radio instead of Muzee's own picks.",
   "failedToLoadPlaylist": "Failed to load playlist",
   "fieldsNotEmpty": "All fields must be filled",
   "folderAlreadyExists": "A folder with this name already exists",
@@ -224,8 +224,6 @@
   "understand": "I understand",
   "undo": "Undo",
   "update": "Update",
-  "useProxy": "Use proxy",
-  "useProxyDescription": "Use the proxy only when streaming fails, unnecessary use may break playback.",
   "userPlaylists": "User playlists",
   "yes": "Yes",
   "youtubePlaylistLinkOrId": "YouTube playlist link or ID",
@@ -435,5 +433,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "personalizeWithYouTube": "Personalise with YouTube",
+  "personalizeWithYouTubeDescription": "Use your YouTube likes and subscriptions to pick songs you'll like. Kept on this device only."
 }

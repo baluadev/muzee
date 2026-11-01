@@ -19,7 +19,7 @@
   "appUpdateIsAvailable": "Đã có bản cập nhật",
   "artist": "Nghệ sĩ",
   "automaticSongPicker": "Tự động phát bài tương tự",
-  "automaticSongPickerDescription": "Tự động phát một bài hát ngẫu nhiên sau khi bản nhạc hiện tại kết thúc.",
+  "automaticSongPickerDescription": "Khi hết hàng đợi, tiếp tục phát các bài tương tự bài cuối cùng.",
   "back": "Quay lại",
   "backToFavorites": "Quay lại mục yêu thích",
   "backedupSuccess": "Dữ liệu được sao lưu thành công",
@@ -79,8 +79,8 @@
   "equalizerPresets": "cài đặt trước",
   "equalizerBands": "Ban nhạc",
   "error": "Đã xảy ra lỗi. Hãy kiểm tra nhật ký hoặc thử lại.",
-  "externalRecommendations": "Gợi ý từ nguồn ngoài",
-  "externalRecommendationsDescription": "Sử dụng thuật toán bên ngoài để đưa ra đề xuất thay vì thuật toán của Muzee.",
+  "externalRecommendations": "Radio YouTube Music",
+  "externalRecommendationsDescription": "Tự động phát chọn bài từ radio của YouTube Music thay vì cách chọn của Muzee.",
   "failedToLoadPlaylist": "Không tải được danh sách phát",
   "fieldsNotEmpty": "Tất cả các trường phải được điền",
   "folderAlreadyExists": "Một thư mục có tên này đã tồn tại",
@@ -223,8 +223,6 @@
   "understand": "Tôi hiểu",
   "undo": "Hoàn tác",
   "update": "Cập nhật",
-  "useProxy": "Sử dụng proxy",
-  "useProxyDescription": "Chỉ sử dụng proxy khi phát trực tuyến không thành công, việc sử dụng không cần thiết có thể làm gián đoạn quá trình phát lại.",
   "userPlaylists": "Danh sách phát của người dùng",
   "yes": "Có",
   "youtubePlaylistLinkOrId": "Liên kết hoặc ID danh sách phát YouTube",
@@ -386,5 +384,7 @@
   "closePlayer": "Đóng trình phát",
   "exitFullscreen": "Thoát toàn màn hình",
   "seekBackSeconds": "Lùi {seconds} giây",
-  "seekForwardSeconds": "Tiến {seconds} giây"
+  "seekForwardSeconds": "Tiến {seconds} giây",
+  "personalizeWithYouTube": "Cá nhân hóa theo YouTube",
+  "personalizeWithYouTubeDescription": "Dùng lượt thích và kênh đăng ký YouTube của bạn để chọn bài hợp gu. Chỉ lưu trên máy này."
 }

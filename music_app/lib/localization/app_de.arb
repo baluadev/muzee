@@ -236,8 +236,6 @@
   "understand": "Ich verstehe",
   "undo": "Rückgängig",
   "update": "Aktualisieren",
-  "useProxy": "Proxy verwenden",
-  "useProxyDescription": "Nutze den Proxy nur, wenn das Streaming fehlschlägt, unnötiger Gebrauch könnte die Wiedergabe beeinträchtigen.",
   "userPlaylists": "Deine Playlists",
   "yes": "Ja",
   "youtubePlaylistLinkOrId": "Youtube-Playlist-Link oder ID einer Youtube-Playlist",

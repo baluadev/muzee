@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:audio_service/audio_service.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +9,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
-
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/localization/app_localizations.dart';
 import 'package:muzee/services/audio_service.dart';
@@ -32,6 +30,7 @@ import 'package:muzee/services/playlist_sharing.dart';
 import 'package:muzee/services/playlists_manager.dart';
 import 'package:muzee/services/router_service.dart';
 import 'package:muzee/services/settings_manager.dart';
+import 'package:muzee/services/youtube_taste_sync.dart';
 import 'package:muzee/theme/app_themes.dart';
 import 'package:muzee/theme/neo/neo_theme.dart';
 import 'package:muzee/theme/neo/neo_typography.dart';
@@ -238,6 +237,7 @@ Future<void> initialisation() async {
     await EntitlementService.loadFromStorage();
 
     await FirebaseService.init();
+    attachYouTubeTasteSync();
     unawaited(GoogleAccountService.instance.restore());
 
     audioHandler = await AudioService.init(

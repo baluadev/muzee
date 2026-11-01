@@ -24,9 +24,10 @@ class GoogleAccount {
   final String? pictureUrl;
 }
 
-/// Google sign-in (OAuth with flutter_appauth), as in Muzee 1.x: same client,
-/// scopes and stored token keys, so people signed in before the update stay
-/// signed in. Used for the account card and cloud backup.
+/// Google sign-in (OAuth with flutter_appauth), as in Muzee 1.x: same client
+/// and stored token keys, so people signed in before the update stay signed
+/// in. Used for the account card, cloud backup and (read-only YouTube) the
+/// taste behind autoplay suggestions.
 class GoogleAccountService {
   GoogleAccountService._();
   static final GoogleAccountService instance = GoogleAccountService._();
@@ -39,7 +40,6 @@ class GoogleAccountService {
     'openid',
     'email',
     'profile',
-    'https://www.googleapis.com/auth/user.phonenumbers.read',
     'https://www.googleapis.com/auth/youtube.readonly',
   ];
   static const _service = AuthorizationServiceConfiguration(
@@ -92,6 +92,15 @@ class GoogleAccountService {
     } finally {
       busy.value = false;
     }
+  }
+
+  /// A current access token (refreshed now, since they last an hour), or
+  /// null when signed out or the refresh failed.
+  Future<String?> freshAccessToken() async {
+    if (account.value == null) return null;
+    final refreshToken = await _read(_refreshTokenKey);
+    if (refreshToken != null) return _refresh(refreshToken);
+    return _read(_accessTokenKey);
   }
 
   Future<void> signOut() async {

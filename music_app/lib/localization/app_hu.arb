@@ -236,8 +236,6 @@
   "understand": "Megértettem",
   "undo": "Visszavonás",
   "update": "Frissítés",
-  "useProxy": "Proxy használata",
-  "useProxyDescription": "Csak akkor használd a proxyt, ha a streaming sikertelen, a felesleges használat megszakíthatja a lejátszást.",
   "userPlaylists": "Felhasználói lejátszási listák",
   "yes": "Igen",
   "youtubePlaylistLinkOrId": "YouTube lejátszási lista vagy azonosító",

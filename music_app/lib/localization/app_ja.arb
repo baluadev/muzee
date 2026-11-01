@@ -236,8 +236,6 @@
   "understand": "理解しました",
   "undo": "元に戻す",
   "update": "更新",
-  "useProxy": "Use proxy",
-  "useProxyDescription": "Use the proxy only when streaming fails, unnecessary use may break playback.",
   "userPlaylists": "再生リスト",
   "yes": "Yes",
   "youtubePlaylistLinkOrId": "YouTube 再生リストのリンクかID ",

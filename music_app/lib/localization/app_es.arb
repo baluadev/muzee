@@ -236,8 +236,6 @@
   "understand": "Entiendo",
   "undo": "Deshacer",
   "update": "Actualización",
-  "useProxy": "Usar proxy",
-  "useProxyDescription": "Usa el proxy solo cuando el streaming falle, uso innecesario puede interrumpir la reproducción.",
   "userPlaylists": "Listas de reproducción del usuario",
   "yes": "Si",
   "youtubePlaylistLinkOrId": "Enlace o ID de lista de reproducción de YouTube",

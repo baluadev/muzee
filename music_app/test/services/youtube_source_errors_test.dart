@@ -96,7 +96,6 @@ void main() {
   setUpAll(() async {
     storage = await setUpTestStorage();
     HttpOverrides.global = http;
-    useProxy.value = false;
   });
 
   tearDownAll(() => tearDownTestStorage(storage));

@@ -236,8 +236,6 @@
   "understand": "Rozumiem",
   "undo": "Cofnij",
   "update": "Aktualizuj",
-  "useProxy": "Użyj proxy",
-  "useProxyDescription": "Używaj proxy tylko wtedy, gdy strumieniowanie nie powiedzie się, niepotrzebne użycie może uszkodzić odtwarzanie.",
   "userPlaylists": "Playlisty użytkownika",
   "yes": "Tak",
   "youtubePlaylistLinkOrId": "Link lub ID playlisty YouTube",

@@ -236,8 +236,6 @@
   "understand": "Capisco",
   "undo": "Annulla",
   "update": "Aggiorna",
-  "useProxy": "Usa proxy",
-  "useProxyDescription": "Usa il proxy solo per eventuali errori di streaming, se non necessario potrebbe interrompere la riproduzione.",
   "userPlaylists": "Playlist utente",
   "yes": "Sì",
   "youtubePlaylistLinkOrId": "YouTube playlist link o ID",

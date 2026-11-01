@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart' show logger;
 import 'package:muzee/services/cloud_backup_service.dart';
+import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/firebase/remote_config_service.dart';
 import 'package:muzee/services/google_account_service.dart';
+import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/utilities/flutter_toast.dart';
 import 'package:muzee/widgets/confirmation_dialog.dart';
 import 'package:muzee/widgets/tubify_components.dart';
@@ -120,6 +122,25 @@ class _SettingsAccountSectionState extends State<SettingsAccountSection> {
                           radius: 14,
                           backgroundImage: NetworkImage(account.pictureUrl!),
                         ),
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: personalizeWithYouTube,
+                  builder: (context, on, _) => TubifySettingsTile(
+                    title: l10n.personalizeWithYouTube,
+                    subtitle: l10n.personalizeWithYouTubeDescription,
+                    icon: FluentIcons.sparkle_24_regular,
+                    trailing: Switch(
+                      value: on,
+                      onChanged: (value) {
+                        personalizeWithYouTube.value = value;
+                        addOrUpdateData(
+                          'settings',
+                          'personalizeWithYouTube',
+                          value,
+                        );
+                      },
+                    ),
+                  ),
                 ),
                 TubifySettingsTile(
                   title: l10n.cloudBackup,

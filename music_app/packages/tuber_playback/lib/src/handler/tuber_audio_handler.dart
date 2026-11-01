@@ -44,6 +44,10 @@ class TuberAudioHandler extends BaseAudioHandler {
       BehaviorSubject<List<Map>>.seeded([]);
   final QueueEntryIdManager _queueEntryIds = QueueEntryIdManager();
   int _currentQueueIndex = 0;
+
+  /// The song that started playing and whose end hasn't been reported to
+  /// [PlaybackHost.recordPlayEnd] yet.
+  Map? _unreportedSong;
   int _currentLoadingIndex = -1;
   int _currentLoadingTransitionId = -1;
   bool _isUpdatingState = false;
@@ -543,7 +547,27 @@ class TuberAudioHandler extends BaseAudioHandler {
     _errorRetryTimer = null;
   }
 
+  /// Tells the host how far the current song got before it ended, was
+  /// skipped or stopped. Each song that started is reported once.
+  void _reportPlayEnd({required bool completed}) {
+    final song = _unreportedSong;
+    _unreportedSong = null;
+    final ytid = song?['ytid']?.toString();
+    if (ytid == null || ytid.isEmpty) return;
+    try {
+      host.recordPlayEnd(
+        song!,
+        position: audioPlayer.position,
+        duration: audioPlayer.duration,
+        completed: completed,
+      );
+    } catch (e, stackTrace) {
+      host.log('Error reporting a play', error: e, stackTrace: stackTrace);
+    }
+  }
+
   Future<void> _handleSongCompletion() async {
+    _reportPlayEnd(completed: true);
     try {
       if (_currentQueueIndex >= 0 && _currentQueueIndex < _queueList.length) {
         _addToHistory(_queueList[_currentQueueIndex]);
@@ -583,6 +607,10 @@ class TuberAudioHandler extends BaseAudioHandler {
           }
           // Only add songs if we're still playing
           if (!audioPlayer.playing) {
+            return;
+          }
+          // Autoplay continues the queue; it never cuts into it.
+          if (hasNext) {
             return;
           }
 
@@ -1015,6 +1043,9 @@ class TuberAudioHandler extends BaseAudioHandler {
       return;
     }
 
+    // Whatever was playing ends here (completion reported it already).
+    _reportPlayEnd(completed: false);
+
     // Start new transition
     _cancelErrorRetry();
     _currentTrackFailed = false;
@@ -1049,6 +1080,7 @@ class TuberAudioHandler extends BaseAudioHandler {
       // Only process result if this is still the current transition
       if (currentTransitionId == _currentLoadingTransitionId) {
         if (success) {
+          _unreportedSong = _queueList[index];
           _preloadUpcomingSongs();
           // Trigger background song addition if auto-play is enabled
           if (host.playNextAutomatically.value) {
@@ -1232,6 +1264,7 @@ class TuberAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> stop() async {
+    _reportPlayEnd(completed: false);
     _debounceTimer?.cancel();
     _cancelErrorRetry();
     _completionEventPending = false;

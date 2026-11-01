@@ -74,6 +74,17 @@ class FakePlaybackHost implements PlaybackHost {
   @override
   Future<Map?> similarSong(String ytid) async => similar;
 
+  /// Every [recordPlayEnd] call: ytid and whether it ran to the end.
+  final playEnds = <(String, bool)>[];
+
+  @override
+  void recordPlayEnd(
+    Map song, {
+    required Duration position,
+    required Duration? duration,
+    required bool completed,
+  }) => playEnds.add((song['ytid'].toString(), completed));
+
   @override
   Future<void> recordListen(String ytid) async => listens.add(ytid);
 

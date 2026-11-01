@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:muzee/services/youtube_music_api.dart';
 import 'package:muzee/utilities/formatter.dart';
 
 /// Finds plain lyrics for a song, trying in order:
@@ -13,19 +14,17 @@ import 'package:muzee/utilities/formatter.dart';
 /// 2 and 3 match on artist and title, cleaned of YouTube noise first
 /// ([lyricsQuery]). The text ends with a "© source" line.
 class LyricsManager {
-  LyricsManager({http.Client? client}) : _client = client ?? http.Client();
+  LyricsManager({http.Client? client})
+    : _client = client ?? http.Client(),
+      _ytm = YouTubeMusicApi(client: client);
 
   final http.Client _client;
+  final YouTubeMusicApi _ytm;
 
   static const _timeout = Duration(seconds: 10);
 
   /// LRCLIB asks clients to identify themselves.
   static const _userAgent = 'Muzee (https://github.com/baluadev/muzee)';
-
-  /// The YouTube Music web client the lyrics requests pretend to be.
-  static const _ytmContext = {
-    'client': {'clientName': 'WEB_REMIX', 'clientVersion': '1.20241023.01.00'},
-  };
 
   Future<String?> fetchLyrics({
     String? videoId,
@@ -49,24 +48,30 @@ class LyricsManager {
 
   Future<String?> _fromYouTubeMusic(String videoId) async {
     try {
-      final next = await _ytmPost('next', {'videoId': videoId});
+      final next = await _ytm.post('next', {'videoId': videoId});
       String? browseId;
-      for (final tab in _findAll(next, 'tabRenderer')) {
-        final id = _path(tab, ['endpoint', 'browseEndpoint', 'browseId']);
+      for (final tab in YouTubeMusicApi.findAll(next, 'tabRenderer')) {
+        final id = YouTubeMusicApi.path(tab, [
+          'endpoint',
+          'browseEndpoint',
+          'browseId',
+        ]);
         if (id is String && id.startsWith('MPLY')) browseId = id;
       }
       if (browseId == null) return null;
 
-      final browse = await _ytmPost('browse', {'browseId': browseId});
-      final shelf = _findAll(
+      final browse = await _ytm.post('browse', {'browseId': browseId});
+      final shelf = YouTubeMusicApi.findAll(
         browse,
         'musicDescriptionShelfRenderer',
       ).firstOrNull;
-      final text = _runsText(_path(shelf, ['description']));
+      final text = YouTubeMusicApi.runsText(
+        YouTubeMusicApi.path(shelf, ['description']),
+      );
       if (text == null || text.trim().isEmpty) return null;
       // "Source: LyricFind" (in the request's language): keep the name.
-      final source = _runsText(
-        _path(shelf, ['footer']),
+      final source = YouTubeMusicApi.runsText(
+        YouTubeMusicApi.path(shelf, ['footer']),
       )?.replaceFirst(RegExp(r'^[^:]*:\s*'), '').trim();
       return _withSource(
         text,
@@ -75,24 +80,6 @@ class LyricsManager {
     } catch (_) {
       return null;
     }
-  }
-
-  Future<Object?> _ytmPost(String endpoint, Map<String, Object> body) async {
-    final response = await _client
-        .post(
-          Uri.https('music.youtube.com', '/youtubei/v1/$endpoint', {
-            'prettyPrint': 'false',
-          }),
-          headers: const {
-            'Content-Type': 'application/json',
-            'Origin': 'https://music.youtube.com',
-            'User-Agent': 'Mozilla/5.0',
-          },
-          body: jsonEncode({'context': _ytmContext, ...body}),
-        )
-        .timeout(_timeout);
-    if (response.statusCode != 200) throw http.ClientException(endpoint);
-    return jsonDecode(utf8.decode(response.bodyBytes));
   }
 
   // --- LRCLIB ----------------------------------------------------------------
@@ -182,34 +169,6 @@ class LyricsManager {
         .replaceAll(RegExp(r'\n{3,}'), '\n\n')
         .trim();
     return '$text\n\n© $source';
-  }
-
-  static Iterable<Object?> _findAll(Object? node, String key) sync* {
-    if (node is Map) {
-      if (node.containsKey(key)) yield node[key];
-      for (final value in node.values) {
-        yield* _findAll(value, key);
-      }
-    } else if (node is List) {
-      for (final value in node) {
-        yield* _findAll(value, key);
-      }
-    }
-  }
-
-  static Object? _path(Object? node, List<String> keys) {
-    var current = node;
-    for (final key in keys) {
-      if (current is! Map) return null;
-      current = current[key];
-    }
-    return current;
-  }
-
-  static String? _runsText(Object? node) {
-    final runs = node is Map ? node['runs'] : null;
-    if (runs is! List) return null;
-    return runs.map((r) => r is Map ? r['text'] ?? '' : '').join();
   }
 }
 

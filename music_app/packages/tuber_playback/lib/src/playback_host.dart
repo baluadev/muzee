@@ -55,5 +55,15 @@ abstract class PlaybackHost {
   /// [ytid] was played again from the start; count it as a listen.
   Future<void> recordListen(String ytid);
 
+  /// [song] stopped playing at [position] of [duration]: it ran to the end
+  /// ([completed]), or the user skipped, picked another song or stopped.
+  /// Apps use it to learn what the listener likes. Must not throw.
+  void recordPlayEnd(
+    Map song, {
+    required Duration position,
+    required Duration? duration,
+    required bool completed,
+  });
+
   void log(String message, {Object? error, StackTrace? stackTrace});
 }

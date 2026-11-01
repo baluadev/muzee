@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import 'package:muzee/main.dart' show logger;
+import 'package:muzee/main.dart' show audioHandler, logger;
 import 'package:muzee/services/common_services.dart';
 import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/settings_manager.dart' as settings;
@@ -65,11 +65,43 @@ class MuzeePlaybackHost implements PlaybackHost {
   @override
   Map<String, dynamic> offlineSong(String ytid) => getOfflineSongByYtid(ytid);
 
+  /// How many recent listens autoplay avoids repeating.
+  static const _recentToSkip = 30;
+
   @override
-  Future<Map?> similarSong(String ytid) => getSimilarSong(ytid);
+  Future<Map?> similarSong(String ytid) {
+    final exclude = <String>{
+      for (final item in audioHandler.queue.value) '${item.extras?['ytid']}',
+      for (final song in userRecentlyPlayed.take(_recentToSkip))
+        '${song['ytid']}',
+    };
+    return getSimilarSong(ytid, exclude: exclude);
+  }
 
   @override
   Future<void> recordListen(String ytid) => updateRecentlyPlayed(ytid);
+
+  @override
+  void recordPlayEnd(
+    Map song, {
+    required Duration position,
+    required Duration? duration,
+    required bool completed,
+  }) {
+    unawaited(
+      tasteProfile
+          .recordPlayEnd(
+            song,
+            position: position,
+            duration: duration,
+            completed: completed,
+          )
+          .catchError(
+            (Object e, StackTrace s) =>
+                logger.log('Recording a play failed', error: e, stackTrace: s),
+          ),
+    );
+  }
 
   @override
   void log(String message, {Object? error, StackTrace? stackTrace}) =>

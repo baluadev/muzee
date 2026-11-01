@@ -236,8 +236,6 @@
   "understand": "Jag förstår",
   "undo": "Ångra",
   "update": "Uppdatera",
-  "useProxy": "Use proxy",
-  "useProxyDescription": "Use the proxy only when streaming fails, unnecessary use may break playback.",
   "userPlaylists": "Användarspellistor",
   "yes": "Yes",
   "youtubePlaylistLinkOrId": "Länk eller ID för YouTube-spellista",

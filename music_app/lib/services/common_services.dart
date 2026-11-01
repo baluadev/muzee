@@ -5,18 +5,18 @@ import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:muzee/main.dart' show logger;
+import 'package:muzee/services/autoplay_picker.dart';
 import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/lyrics_manager.dart';
 import 'package:muzee/services/playlists_manager.dart';
-import 'package:muzee/services/proxy_manager.dart';
 import 'package:muzee/services/settings_manager.dart';
+import 'package:muzee/services/taste_profile.dart';
+import 'package:muzee/services/youtube_client.dart';
 import 'package:muzee/utilities/app_utils.dart';
 import 'package:muzee/utilities/formatter.dart';
 import 'package:muzee/utilities/song_filtering.dart';
 import 'package:tuber_playback/tuber_playback.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
-
-List globalSongs = [];
 
 List userLikedSongsList = Hive.box('user').get('likedSongs', defaultValue: []);
 
@@ -28,6 +28,14 @@ List userOfflineSongs = Hive.box(
 ).get('offlineSongs', defaultValue: []);
 
 final currentLikedSongsLength = ValueNotifier<int>(userLikedSongsList.length);
+
+/// What the listener likes; ranks autoplay suggestions.
+final tasteProfile = TasteProfile(
+  userBox: Hive.box('user'),
+  deviceBox: Hive.box('userNoBackup'),
+  likedSongs: () => userLikedSongsList,
+  recentSongs: () => userRecentlyPlayed,
+);
 final currentOfflineSongsLength = ValueNotifier<int>(userOfflineSongs.length);
 final currentRecentlyPlayedLength = ValueNotifier<int>(
   userRecentlyPlayed.length,
@@ -44,12 +52,8 @@ final streamManifestResolver = StreamManifestResolver(
   log: logger.log,
 );
 
-/// Fetches a stream manifest for a song, honoring proxy settings.
+/// Fetches a stream manifest for a song.
 Future<StreamManifest?> _fetchStreamManifest(String songId) async {
-  if (useProxy.value) {
-    return ProxyManager().getSongManifest(songId).timeout(_manifestTimeout);
-  }
-
   final result = await streamManifestResolver
       .resolve(songId)
       .timeout(_manifestTimeout);
@@ -116,90 +120,6 @@ Future<List> fetchSongsList(String searchQuery) async {
     logger.log('Error in fetchSongsList', error: e, stackTrace: stackTrace);
     rethrow;
   }
-}
-
-Future<List> getRecommendedSongs() async {
-  try {
-    if (externalRecommendations.value && userRecentlyPlayed.isNotEmpty) {
-      return await _getRecommendationsFromRecentlyPlayed();
-    } else {
-      return await _getRecommendationsFromMixedSources();
-    }
-  } catch (e, stackTrace) {
-    logger.log(
-      'Error in getRecommendedSongs',
-      error: e,
-      stackTrace: stackTrace,
-    );
-    return [];
-  }
-}
-
-Future<List> _getRecommendationsFromRecentlyPlayed() async {
-  final recent = (List.from(userRecentlyPlayed)..shuffle()).take(3).toList();
-
-  final futures = recent.map((songData) async {
-    try {
-      final song = await ytClient.videos.get(songData['ytid']);
-      final relatedSongs = await ytClient.videos.getRelatedVideos(song) ?? [];
-      return relatedSongs
-          .where((s) => !s.isLive)
-          .take(3)
-          .map((s) => returnSongLayout(0, s))
-          .toList();
-    } catch (e, stackTrace) {
-      logger.log(
-        'Error getting related videos for ${songData['ytid']}',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return <Map>[];
-    }
-  }).toList();
-
-  final results = await Future.wait(futures);
-  // Limit to 15 items max for performance
-  final playlistSongs = results.expand((list) => list).take(15).toList()
-    ..shuffle();
-  return playlistSongs;
-}
-
-Future<List> _getRecommendationsFromMixedSources() async {
-  final playlistSongs = [...userLikedSongsList, ...userRecentlyPlayed];
-
-  if (globalSongs.isEmpty) {
-    const playlistId = 'PLgzTt0k8mXzEk586ze4BjvDXR7c-TUSnx';
-    globalSongs = await getSongsFromPlaylist(playlistId);
-  }
-  playlistSongs.addAll(globalSongs.take(10));
-
-  if (userCustomPlaylists.value.isNotEmpty) {
-    for (final userPlaylist in userCustomPlaylists.value) {
-      final _list = List.from(userPlaylist['list'] as List)..shuffle();
-      playlistSongs.addAll(_list.take(5));
-    }
-  }
-
-  return _deduplicateAndShuffle(playlistSongs);
-}
-
-List _deduplicateAndShuffle(List playlistSongs) {
-  final seenYtIds = <String>{};
-  final uniqueSongs = <Map>[];
-
-  playlistSongs.shuffle();
-
-  for (final song in playlistSongs) {
-    if (song['ytid'] != null &&
-        song['isLive'] != true &&
-        seenYtIds.add(song['ytid'])) {
-      uniqueSongs.add(song);
-      // Early exit when we have enough songs
-      if (uniqueSongs.length >= 15) break;
-    }
-  }
-
-  return uniqueSongs;
 }
 
 Future<void> updateSongLikeStatus(dynamic songId, bool add) async {
@@ -338,25 +258,30 @@ Future<List<String>> getSearchSuggestions(String query) async {
 
 Future<List<Map<String, int>>> getSkipSegments(String id) async {
   try {
-    final res = await ProxyManager().getProxiedResponse(
-      Uri(
-        scheme: 'https',
-        host: 'sponsor.ajay.app',
-        path: '/api/skipSegments',
-        queryParameters: {
-          'videoID': id,
-          'category': [
-            'sponsor',
-            'selfpromo',
-            'interaction',
-            'intro',
-            'outro',
-            'music_offtopic',
-          ],
-          'actionType': 'skip',
-        },
-      ),
-    );
+    final res = await http
+        .get(
+          Uri(
+            scheme: 'https',
+            host: 'sponsor.ajay.app',
+            path: '/api/skipSegments',
+            queryParameters: {
+              'videoID': id,
+              'category': [
+                'sponsor',
+                'selfpromo',
+                'interaction',
+                'intro',
+                'outro',
+                'music_offtopic',
+              ],
+              'actionType': 'skip',
+            },
+          ),
+        )
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => http.Response('Timeout', 408),
+        );
     if (res.statusCode == 200 && res.body != 'Not Found') {
       final data = jsonDecode(res.body);
       final segments = data.map((obj) {
@@ -375,27 +300,52 @@ Future<List<Map<String, int>>> getSkipSegments(String id) async {
   }
 }
 
-/// A related song to autoplay after [songYtId], or null.
-Future<Map?> getSimilarSong(String songYtId) async {
-  try {
-    final song = await ytClient.videos.get(songYtId);
-    final relatedSongs = await ytClient.videos.getRelatedVideos(song) ?? [];
+final _autoplayPicker = AutoplayPicker();
 
-    final nonLive = relatedSongs
-        .where((v) => !v.isLive)
-        .toList(growable: false);
-    if (nonLive.isNotEmpty) return returnSongLayout(0, nonLive.first);
-    logger.log(
-      'No non-live related songs found for $songYtId '
-      '(had ${relatedSongs.length} related)',
-    );
-  } catch (e, stackTrace) {
-    logger.log(
-      'Error while fetching next similar song:',
-      error: e,
-      stackTrace: stackTrace,
+/// A song to autoplay after [songYtId], or null. Skips the ytids in
+/// [exclude] (the queue, recent listens). With external recommendations on,
+/// YouTube Music's radio picks it; otherwise Muzee filters YouTube's related
+/// videos (see [AutoplayPicker]). Either falls back to the other. Both are
+/// ranked by the listener's [tasteProfile].
+Future<Map?> getSimilarSong(
+  String songYtId, {
+  Set<String> exclude = const {},
+}) async {
+  final taste = tasteProfile.snapshot(
+    includeYouTube: personalizeWithYouTube.value,
+  );
+
+  Future<Map?> related() async {
+    final song = await ytClient.videos.get(songYtId);
+    final videos = await ytClient.videos.getRelatedVideos(song) ?? [];
+    return _autoplayPicker.fromRelated(
+      songYtId,
+      videos.whereType<Video>(),
+      exclude,
+      (v) => returnSongLayout(0, v),
+      taste: taste,
     );
   }
+
+  Future<Map?> radio() =>
+      _autoplayPicker.fromYouTubeMusicRadio(songYtId, exclude, taste: taste);
+
+  final sources = externalRecommendations.value
+      ? [radio, related]
+      : [related, radio];
+  for (final source in sources) {
+    try {
+      final song = await source();
+      if (song != null) return song;
+    } catch (e, stackTrace) {
+      logger.log(
+        'Error while fetching a song to autoplay:',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+  logger.log('No song to autoplay after $songYtId');
   return null;
 }
 

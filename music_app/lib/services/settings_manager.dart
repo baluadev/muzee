@@ -29,12 +29,14 @@ final predictiveBack = ValueNotifier<bool>(
   Hive.box('settings').get('predictiveBack', defaultValue: true),
 );
 
-final externalRecommendations = ValueNotifier<bool>(
-  Hive.box('settings').get('externalRecommendations', defaultValue: false),
+/// Use the signed-in Google account's YouTube likes and subscriptions to
+/// rank autoplay suggestions.
+final personalizeWithYouTube = ValueNotifier<bool>(
+  Hive.box('settings').get('personalizeWithYouTube', defaultValue: true),
 );
 
-final useProxy = ValueNotifier<bool>(
-  Hive.box('settings').get('useProxy', defaultValue: false),
+final externalRecommendations = ValueNotifier<bool>(
+  Hive.box('settings').get('externalRecommendations', defaultValue: false),
 );
 
 /// The phone's country when YouTube has charts for it, else the US: the

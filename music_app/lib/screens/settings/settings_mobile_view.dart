@@ -6,7 +6,6 @@ import 'package:muzee/constants/version.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/settings/settings_controller.dart';
-import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
 import 'package:muzee/services/router_service.dart';
 import 'package:muzee/services/settings_manager.dart';
@@ -85,30 +84,26 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             ),
           ),
         ),
+        // Only autoplay uses it, so it's off while autoplay is.
         ValueListenableBuilder<bool>(
-          valueListenable: externalRecommendations,
-          builder: (_, value, __) => TubifySettingsTile(
-            title: l10n.externalRecommendations,
-            subtitle: l10n.externalRecommendationsDescription,
-            icon: FluentIcons.thumb_like_24_regular,
-            trailing: _switch(
-              value,
-              (value) => widget.controller.toggleExternalRecommendations(
-                context,
-                value,
+          valueListenable: playNextSongAutomatically,
+          builder: (_, autoplay, __) => ValueListenableBuilder<bool>(
+            valueListenable: externalRecommendations,
+            builder: (_, value, __) => Opacity(
+              opacity: autoplay ? 1 : 0.4,
+              child: TubifySettingsTile(
+                title: l10n.externalRecommendations,
+                subtitle: l10n.externalRecommendationsDescription,
+                icon: FluentIcons.live_24_regular,
+                trailing: Switch(
+                  value: value,
+                  onChanged: autoplay
+                      ? (value) => widget.controller
+                            .toggleExternalRecommendations(context, value)
+                      : null,
+                ),
               ),
             ),
-          ),
-        ),
-        ValueListenableBuilder<bool>(
-          valueListenable: useProxy,
-          builder: (_, value, __) => TubifySettingsTile(
-            title: l10n.useProxy,
-            icon: FluentIcons.globe_shield_24_regular,
-            trailing: _switch(value, (value) {
-              useProxy.value = value;
-              addOrUpdateData('settings', 'useProxy', value);
-            }),
           ),
         ),
       ],

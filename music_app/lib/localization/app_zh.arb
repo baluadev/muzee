@@ -236,8 +236,6 @@
   "understand": "我知道了",
   "undo": "撤销",
   "update": "更新",
-  "useProxy": "使用代理",
-  "useProxyDescription": "仅在流媒体播放失败时才使用代理，不必要的代理使用可能会导致播放中断。",
   "userPlaylists": "用户播放列表",
   "yes": "是",
   "youtubePlaylistLinkOrId": "YouTube 播放列表链接或 ID",
