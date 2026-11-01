@@ -424,6 +424,69 @@ void main() {
     });
   });
 
+  group('search history and results', () {
+    testWidgets('a repeated search moves to the top; history is capped', (
+      tester,
+    ) async {
+      search.searchHistoryNotifier.value = [
+        for (var i = 0; i < search.searchHistoryLimit; i++) 'old $i',
+      ];
+      final controller = search.SearchController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(app(SearchMobileView(controller: controller)));
+
+      await resolve(tester, controller.submitSearch('old 5'));
+      expect(search.searchHistoryNotifier.value.first, 'old 5');
+      expect(
+        search.searchHistoryNotifier.value.where((q) => q == 'old 5'),
+        hasLength(1),
+      );
+
+      await resolve(tester, controller.submitSearch('brand new'));
+      expect(search.searchHistoryNotifier.value.first, 'brand new');
+      expect(
+        search.searchHistoryNotifier.value,
+        hasLength(search.searchHistoryLimit),
+      );
+      await drain(tester);
+    });
+
+    testWidgets('editing the query goes back to history', (tester) async {
+      search.searchHistoryNotifier.value = ['lofi beats'];
+      final controller = search.SearchController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(app(SearchMobileView(controller: controller)));
+
+      await resolve(tester, controller.submitSearch('lofi beats'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(controller.showingResults.value, isTrue);
+      expect(find.byType(TabBar), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(controller.showingResults.value, isFalse);
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text(en.recentSearches), findsOneWidget);
+      await drain(tester);
+    });
+
+    testWidgets('Clear all empties the history after asking', (tester) async {
+      search.searchHistoryNotifier.value = ['one', 'two'];
+      final controller = search.SearchController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(app(SearchMobileView(controller: controller)));
+
+      await tester.tap(find.text(en.clearAll));
+      await tester.pumpAndSettle();
+      expect(find.text(en.clearSearchHistoryQuestion), findsOneWidget);
+      await tester.tap(find.text(en.clear).last);
+      await tester.pumpAndSettle();
+
+      expect(search.searchHistoryNotifier.value, isEmpty);
+      expect(find.text('one'), findsNothing);
+    });
+  });
+
   group('playlist page', () {
     const playlistId = 'PLgzTt0k8mXzEk586ze4BjvDXR7c-TUSnx';
 

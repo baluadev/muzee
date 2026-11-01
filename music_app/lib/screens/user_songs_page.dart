@@ -1,6 +1,5 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:muzee/constants/app_constants.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart' show logger, audioHandler;
 import 'package:muzee/services/common_services.dart';
@@ -192,7 +191,8 @@ class _UserSongsPageState extends State<UserSongsPage> {
     final isLandscape = screenWidth > MediaQuery.sizeOf(context).height;
     return PlaylistCube(
       {'title': title},
-      size: isLandscape ? 250 : screenWidth / commonPlaylistArtworkDivision,
+      // Same size as a playlist page's cover (the header caps it).
+      size: isLandscape ? 250 : screenWidth * 0.8,
       cubeIcon: icon,
     );
   }

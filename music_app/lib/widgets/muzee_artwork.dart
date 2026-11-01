@@ -33,6 +33,29 @@ class _ResumeObserver extends WidgetsBindingObserver {
 /// Network artwork with a placeholder, a music-note fallback, and retries:
 /// a failed image tries again after 5 s, 15 s and 60 s, and whenever the
 /// app is resumed. One loader for every cover in the app.
+/// YouTube thumbnail sizes, best first.
+const _youTubeThumbnailSizes = [
+  'maxresdefault',
+  'sddefault',
+  'hqdefault',
+  'mqdefault',
+];
+final _youTubeThumbnail = RegExp(
+  r'^(https?://(?:i\d?\.ytimg\.com|img\.youtube\.com)/vi(?:_webp)?/[^/]+/)(\w+)(\.\w+)$',
+);
+
+/// The next smaller thumbnail of the same YouTube video as [url], or null
+/// when [url] isn't one or is already the smallest. Old videos have no
+/// maxres (or even sd) thumbnail, so artwork steps down on a failure.
+String? smallerYouTubeThumbnail(String? url) {
+  final match = _youTubeThumbnail.firstMatch(url ?? '');
+  if (match == null) return null;
+  final index = _youTubeThumbnailSizes.indexOf(match.group(2)!);
+  if (index < 0 || index == _youTubeThumbnailSizes.length - 1) return null;
+  return '${match.group(1)}${_youTubeThumbnailSizes[index + 1]}'
+      '${match.group(3)}';
+}
+
 class MuzeeArtwork extends StatefulWidget {
   const MuzeeArtwork({
     super.key,
@@ -68,6 +91,11 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
   bool _failed = false;
   Timer? _retryTimer;
 
+  /// [MuzeeArtwork.url], or a smaller thumbnail of the same video after
+  /// the bigger ones failed.
+  String? _currentUrl;
+  String? get _url => _currentUrl ?? widget.url;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +109,7 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
       _retryTimer?.cancel();
       _retryTimer = null;
       _attempt = 0;
+      _currentUrl = null;
       _failed = false;
     }
   }
@@ -97,7 +126,7 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
   }
 
   Future<void> _retry() async {
-    final url = widget.url;
+    final url = _url;
     _retryTimer?.cancel();
     _retryTimer = null;
     if (url == null || url.isEmpty) return;
@@ -110,6 +139,14 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
   }
 
   void _onError() {
+    final smaller = smallerYouTubeThumbnail(_url);
+    if (smaller != null) {
+      // After this frame: errorWidget runs during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _currentUrl = smaller);
+      });
+      return;
+    }
     _failed = true;
     final step = _attempt.clamp(0, _backoff.length);
     if (_retryTimer != null || step >= _backoff.length) return;
@@ -119,7 +156,7 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
   @override
   Widget build(BuildContext context) {
     final neo = context.neo;
-    final url = widget.url;
+    final url = _url;
     Widget box(Widget? child) => Container(
       width: widget.width,
       height: widget.height,

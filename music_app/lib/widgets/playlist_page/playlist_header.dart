@@ -44,7 +44,9 @@ class PlaylistHeader extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 260),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: AspectRatio(aspectRatio: 1, child: image),
+                // Centred: an image smaller than the box would otherwise sit
+                // in its top-left corner.
+                child: AspectRatio(aspectRatio: 1, child: Center(child: image)),
               ),
             ),
           ),

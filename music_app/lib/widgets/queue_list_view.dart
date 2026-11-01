@@ -6,8 +6,10 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
+import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/widgets/confirmation_dialog.dart';
+import 'package:muzee/widgets/monetization/banner_ad_widget.dart';
 import 'package:muzee/widgets/no_artwork_cube.dart';
 
 class QueueWidget extends StatefulWidget {
@@ -176,6 +178,15 @@ class _QueueWidgetState extends State<QueueWidget> {
                     ],
                   ),
                 ),
+        ),
+        // Pinned at the foot of the sheet, under the list: seen without
+        // scrolling a long queue, and away from the player's controls.
+        const SafeArea(
+          top: false,
+          child: BannerAdWidget(
+            placement: AdBannerPlacement.queue,
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+          ),
         ),
       ],
     );

@@ -45,7 +45,7 @@ class NativeAdTile extends StatelessWidget {
   final EdgeInsets padding;
 
   /// The small template needs about this much height.
-  static const height = 104.0;
+  static const height = 92.0;
 
   @override
   Widget build(BuildContext context) => AdEligibilityBuilder(
