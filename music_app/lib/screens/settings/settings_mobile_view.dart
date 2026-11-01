@@ -1,5 +1,4 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/constants/app_constants.dart';
 import 'package:muzee/constants/version.dart';
@@ -9,7 +8,6 @@ import 'package:muzee/screens/settings/settings_controller.dart';
 import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
 import 'package:muzee/services/reminder_service.dart';
-import 'package:muzee/services/router_service.dart';
 import 'package:muzee/services/settings_manager.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/utilities/language_utils.dart';
@@ -229,14 +227,6 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
           icon: FluentIcons.info_24_regular,
           trailingText: appVersion,
         ),
-        if (kDebugMode)
-          TubifySettingsTile(
-            title: 'Design system',
-            icon: FluentIcons.color_24_regular,
-            onTap: () => NavigationManager.router.push(
-              NavigationManager.designSystemPath,
-            ),
-          ),
       ],
     );
   }

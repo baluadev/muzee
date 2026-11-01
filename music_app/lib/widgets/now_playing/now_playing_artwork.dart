@@ -24,6 +24,9 @@ class NowPlayingPreview extends InheritedWidget {
   bool updateShouldNotify(NowPlayingPreview oldWidget) => false;
 }
 
+/// Side margin of the portrait player's artwork.
+const portraitArtworkMargin = 24.0;
+
 class NowPlayingArtwork extends StatelessWidget {
   const NowPlayingArtwork({
     super.key,
@@ -42,19 +45,22 @@ class NowPlayingArtwork extends StatelessWidget {
     final screenHeight = size.height;
     final isLandscape = screenWidth > screenHeight;
     final isDesktop = screenWidth > 800;
+    // Portrait: the page's width (less its 24 dp side margins) at 16:9,
+    // the shape of YouTube videos and thumbnails, so nothing is letterboxed
+    // and the full-screen button sits on the picture's corner.
     final imageWidth = isDesktop
         ? screenHeight * 0.50
         : isLandscape
         ? screenHeight * 0.65
-        : double.infinity;
+        : screenWidth - 2 * portraitArtworkMargin;
 
     final imageHeight = isDesktop
         ? screenHeight * 0.50
         : isLandscape
         ? screenHeight * 0.65
-        : screenWidth * 0.60;
+        : imageWidth * 9 / 16;
 
-    const borderRadius = 8.0;
+    const borderRadius = 16.0;
     final preview = NowPlayingPreview.of(context);
 
     return FlipCard(
@@ -309,8 +315,8 @@ class _NowPlayingMediaSurfaceState extends State<_NowPlayingMediaSurface> {
             ),
           ),
           Positioned(
-            right: 12,
-            bottom: 12,
+            right: 10,
+            bottom: 10,
             child: Material(
               color: Colors.black54,
               borderRadius: BorderRadius.circular(999),

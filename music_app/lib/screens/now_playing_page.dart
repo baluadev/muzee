@@ -6,8 +6,10 @@ import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
+import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/services/monetization/ui_route_flags.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
+import 'package:muzee/widgets/monetization/banner_ad_widget.dart';
 import 'package:muzee/widgets/now_playing/bottom_actions_row.dart';
 import 'package:muzee/widgets/now_playing/marquee_text_widget.dart';
 import 'package:muzee/widgets/now_playing/now_playing_artwork.dart';
@@ -305,42 +307,72 @@ class _MobileLayout extends StatelessWidget {
     return _buildPortraitLayout(context);
   }
 
+  /// One block, centred in the page: artwork, title right under it, then
+  /// the timeline and controls; the actions row stays at the bottom. On
+  /// screens tall enough to spare the room, a banner sits at the top,
+  /// above the artwork and away from every control.
   Widget _buildPortraitLayout(BuildContext context) {
     final isLive = metadata.extras?['isLive'] ?? false;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(
-                child: NowPlayingArtwork(
-                  size: size,
-                  metadata: metadata,
-                  lyricsController: lyricsController,
-                ),
+    final artworkHeight = (size.width - 2 * portraitArtworkMargin) * 9 / 16;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Title, timeline, controls, actions and the gaps between them.
+        const fixedContent = 340.0;
+        // A banner (up to ~60 dp with its padding) plus breathing room.
+        const bannerRoom = 120.0;
+        final showBanner =
+            constraints.maxHeight >= artworkHeight + fixedContent + bannerRoom;
+        return Column(
+          children: [
+            if (showBanner)
+              const BannerAdWidget(
+                placement: AdBannerPlacement.player,
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: portraitArtworkMargin,
+              ),
+              child: NowPlayingArtwork(
+                size: size,
+                metadata: metadata,
+                lyricsController: lyricsController,
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
-            child: _TitleBlock(metadata: metadata),
-          ),
-          if (!isLive) ...[const PositionSlider(), const SizedBox(height: 4)],
-          PlayerControlButtons(
-            metadata: metadata,
-            iconSize: adjustedIconSize,
-            miniIconSize: adjustedMiniIconSize,
-          ),
-          const SizedBox(height: 16),
-          BottomActionsRow(
-            isLargeScreen: isLargeScreen,
-            lyricsController: lyricsController,
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
+            const SizedBox(height: 28),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _TitleBlock(metadata: metadata),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  if (!isLive) ...[
+                    const PositionSlider(),
+                    const SizedBox(height: 4),
+                  ],
+                  PlayerControlButtons(
+                    metadata: metadata,
+                    iconSize: adjustedIconSize,
+                    miniIconSize: adjustedMiniIconSize,
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: BottomActionsRow(
+                isLargeScreen: isLargeScreen,
+                lyricsController: lyricsController,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

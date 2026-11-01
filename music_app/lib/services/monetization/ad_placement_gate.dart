@@ -7,9 +7,10 @@ import 'package:muzee/services/monetization/monetization_remote_config.dart';
 import 'package:muzee/services/monetization/ui_route_flags.dart';
 import 'package:muzee/services/pip_service.dart';
 
-/// Where banners sit: inline in the browsing screens and at the foot of the
-/// queue sheet; never on the player itself (next to its controls).
-enum AdBannerPlacement { home, library, search, queue }
+/// Where banners sit: inline in the browsing screens, at the foot of the
+/// queue sheet, and at the top of the player (above the artwork, away from
+/// its controls, only when the screen has room to spare).
+enum AdBannerPlacement { home, library, search, queue, player }
 
 /// Where native ads sit: inside long lists.
 enum AdNativePlacement { playlist, searchResults, allPlaylists }
