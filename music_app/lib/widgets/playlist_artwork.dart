@@ -1,6 +1,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/utilities/artwork_provider.dart';
+import 'package:muzee/widgets/muzee_artwork.dart';
 import 'package:muzee/widgets/no_artwork_cube.dart';
 
 class PlaylistArtwork extends StatelessWidget {
@@ -37,7 +38,12 @@ class PlaylistArtwork extends StatelessWidget {
         width: size,
         height: size,
         child: Image(
-          image: provider,
+          // Decoded at the size shown.
+          image: ResizeImage.resizeIfNeeded(
+            decodeWidthFor(context, size),
+            null,
+            provider,
+          ),
           height: size,
           width: size,
           fit: BoxFit.cover,

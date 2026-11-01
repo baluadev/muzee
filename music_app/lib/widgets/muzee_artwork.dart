@@ -176,19 +176,35 @@ class _MuzeeArtworkState extends State<MuzeeArtwork> {
       borderRadius: BorderRadius.circular(widget.borderRadius),
       child: (url == null || url.isEmpty)
           ? fallback
-          : CachedNetworkImage(
-              key: ValueKey('$url#$_attempt'),
-              imageUrl: url,
-              width: widget.width,
-              height: widget.height,
-              fit: widget.fit,
-              fadeInDuration: const Duration(milliseconds: 150),
-              placeholder: (_, __) => box(null),
-              errorWidget: (_, __, ___) {
-                _onError();
-                return fallback;
-              },
+          : LayoutBuilder(
+              builder: (context, constraints) => CachedNetworkImage(
+                key: ValueKey('$url#$_attempt'),
+                imageUrl: url,
+                width: widget.width,
+                height: widget.height,
+                fit: widget.fit,
+                // Decode at the size it's shown, not the source's (YouTube
+                // thumbnails are up to 1280×720): a fraction of the memory.
+                memCacheWidth: decodeWidthFor(
+                  context,
+                  widget.width ?? constraints.maxWidth,
+                ),
+                fadeInDuration: const Duration(milliseconds: 150),
+                placeholder: (_, __) => box(null),
+                errorWidget: (_, __, ___) {
+                  _onError();
+                  return fallback;
+                },
+              ),
             ),
     );
   }
+}
+
+/// Pixels to decode an image [logicalWidth] wide at, or null to keep the
+/// source size (unbounded layout). Capped at YouTube's largest thumbnail.
+int? decodeWidthFor(BuildContext context, double logicalWidth) {
+  if (!logicalWidth.isFinite || logicalWidth <= 0) return null;
+  final pixels = (logicalWidth * MediaQuery.devicePixelRatioOf(context)).ceil();
+  return pixels.clamp(1, 1280);
 }

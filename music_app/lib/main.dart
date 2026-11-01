@@ -10,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/localization/app_localizations.dart';
+import 'package:muzee/services/app_info.dart';
 import 'package:muzee/services/audio_service.dart';
 import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/firebase/analytics_service.dart';
@@ -240,6 +241,7 @@ Future<void> initialisation() async {
     // Before anything reads the library: Muzee 1.x data moves in here.
     await migrateMuzee1IfNeeded();
 
+    await AppInfo.load();
     await MonetizationRemoteConfig.ensureDefaults();
     await AdsRuntime.recordLaunch();
     await EntitlementService.loadFromStorage();

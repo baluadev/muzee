@@ -1,10 +1,10 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:muzee/constants/app_constants.dart';
-import 'package:muzee/constants/version.dart';
 import 'package:muzee/extensions/l10n.dart';
 import 'package:muzee/main.dart';
 import 'package:muzee/screens/settings/settings_controller.dart';
+import 'package:muzee/services/app_info.dart';
 import 'package:muzee/services/data_manager.dart';
 import 'package:muzee/services/monetization/entitlement_service.dart';
 import 'package:muzee/services/reminder_service.dart';
@@ -225,7 +225,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
         TubifySettingsTile(
           title: l10n.version,
           icon: FluentIcons.info_24_regular,
-          trailingText: appVersion,
+          trailingText: AppInfo.version,
         ),
       ],
     );

@@ -1,7 +1,7 @@
 name: muzee
 description: "Muzee develop by balua.dev"
 publish_to: 'none'
-version: 2.0.0+20261031
+version: 2.0.0+20261101
 
 environment:
   sdk: '>=3.11.0 <4.0.0'
@@ -35,12 +35,16 @@ dependencies:
   hive_flutter: ^1.1.0
   http: ^1.6.0
   in_app_purchase: ^3.2.3
+  # Play Billing Library 8 (Google Play requires 8.0.0+ from Aug 31, 2026).
+  in_app_purchase_android: ^0.5.0
+  in_app_update: ^4.2.5
   intl: ^0.20.2
   isar_community: ^3.4.1
   isar_community_flutter_libs: ^3.4.1
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
   media_kit_video: ^2.0.1
+  package_info_plus: ^9.0.1
   path_provider: ^2.1.5
   receive_sharing_intent:
     path: ./packages/receive_sharing_intent

@@ -10,6 +10,7 @@ import 'package:muzee/services/monetization/ad_placement_gate.dart';
 import 'package:muzee/theme/neo/neo_colors.dart';
 import 'package:muzee/widgets/confirmation_dialog.dart';
 import 'package:muzee/widgets/monetization/banner_ad_widget.dart';
+import 'package:muzee/widgets/muzee_artwork.dart';
 import 'package:muzee/widgets/no_artwork_cube.dart';
 
 class QueueWidget extends StatefulWidget {
@@ -679,6 +680,7 @@ class _ArtworkThumbnail extends StatelessWidget {
       width: size,
       height: size,
       imageUrl: imageUrl,
+      memCacheWidth: decodeWidthFor(context, size),
       imageBuilder: (_, imageProvider) => ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Image(image: imageProvider, fit: BoxFit.cover),

@@ -45,9 +45,10 @@ fvm flutter test
 fvm flutter build appbundle --release --dart-define=USE_TEST_ADS=false
 ```
 
-- **Version:** `version` in pubspec.yaml (and `appVersion` in
-  `lib/constants/version.dart`). The versionCode must stay above 1.x's last
-  one, 20250804.
+- **Version:** `version` in pubspec.yaml (the app reads it at runtime, see
+  `AppInfo`). The versionCode must stay above 1.x's last one, 20250804.
+- **Update prompt:** Remote Config `android_version` (latest versionName),
+  `force_update`, `update_url_android`; see `RemoteConfigService`.
 - **Release signing:** `android/key.properties` (`storeFile`, `keyAlias`,
   `keyPassword`, `storePassword`), with `storeFile` defaulting to
   `android/app/muzee_keystore`. Without it, release builds are signed with
