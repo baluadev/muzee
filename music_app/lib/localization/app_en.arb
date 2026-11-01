@@ -462,5 +462,34 @@
   "appearanceSystem": "Match system",
   "appearanceLight": "Light",
   "appearanceDark": "Dark",
-  "appearanceBlack": "Pure black"
+  "appearanceBlack": "Pure black",
+  "sleepTimerMinutes": "{minutes} min",
+  "@sleepTimerMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerEndOfSong": "End of this song",
+  "sleepTimerPickTime": "Pick a time…",
+  "sleepTimerTurnOff": "Turn off timer",
+  "sleepTimerStopsAt": "Music stops at {time}",
+  "@sleepTimerStopsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStopsAfterSong": "Music stops after this song",
+  "sleepTimerRemaining": "{time} left",
+  "@sleepTimerRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerHint": "Music pauses when the timer ends."
 }

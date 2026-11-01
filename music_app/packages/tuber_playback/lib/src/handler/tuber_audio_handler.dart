@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuber_playback/src/engine/media_player_adapter.dart';
 import 'package:tuber_playback/src/media_item_mapping.dart';
@@ -36,6 +37,9 @@ class TuberAudioHandler extends BaseAudioHandler {
   Timer? _sleepTimer;
   Timer? _debounceTimer;
   bool sleepTimerExpired = false;
+
+  /// Pause when the current song ends, instead of after a fixed time.
+  final sleepAtEndOfTrack = ValueNotifier<bool>(false);
 
   final List<Map> _queueList = [];
   final List<Map> _originalQueueList = [];
@@ -422,6 +426,13 @@ class TuberAudioHandler extends BaseAudioHandler {
   void _handleProcessingStateChange(MusifyProcessingState state) {
     try {
       if (state == MusifyProcessingState.completed) {
+        if (sleepAtEndOfTrack.value && !_completionEventPending) {
+          // "Stop after this song": end here instead of moving on.
+          sleepAtEndOfTrack.value = false;
+          _reportPlayEnd(completed: true);
+          unawaited(pause());
+          return;
+        }
         if (!sleepTimerExpired && !_completionEventPending) {
           _completionEventPending = true;
 
@@ -1949,8 +1960,18 @@ class TuberAudioHandler extends BaseAudioHandler {
     }
   }
 
+  /// Pauses once the current song has played to the end.
+  void setSleepAtEndOfTrack() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    sleepTimerExpired = false;
+    host.sleepTimer.value = null;
+    sleepAtEndOfTrack.value = true;
+  }
+
   Future<void> setSleepTimer(Duration duration) async {
     try {
+      sleepAtEndOfTrack.value = false;
       _sleepTimer?.cancel();
       sleepTimerExpired = false;
       host.sleepTimer.value = duration;
@@ -1967,6 +1988,7 @@ class TuberAudioHandler extends BaseAudioHandler {
 
   void cancelSleepTimer() {
     try {
+      sleepAtEndOfTrack.value = false;
       _sleepTimer?.cancel();
       _sleepTimer = null;
       sleepTimerExpired = false;

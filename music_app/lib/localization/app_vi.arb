@@ -399,5 +399,13 @@
   "appearanceSystem": "Theo hệ thống",
   "appearanceLight": "Sáng",
   "appearanceDark": "Tối",
-  "appearanceBlack": "Đen tuyền"
+  "appearanceBlack": "Đen tuyền",
+  "sleepTimerMinutes": "{minutes} phút",
+  "sleepTimerEndOfSong": "Khi hết bài này",
+  "sleepTimerPickTime": "Chọn giờ…",
+  "sleepTimerTurnOff": "Tắt hẹn giờ",
+  "sleepTimerStopsAt": "Nhạc sẽ dừng lúc {time}",
+  "sleepTimerStopsAfterSong": "Nhạc sẽ dừng khi hết bài này",
+  "sleepTimerRemaining": "Còn {time}",
+  "sleepTimerHint": "Nhạc sẽ tạm dừng khi hết giờ."
 }

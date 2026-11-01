@@ -350,6 +350,28 @@ void main() {
       expect(queueIds(), [songId(0), songId(1), songId(2)]);
     });
 
+    test(
+      '"stop after this song" pauses at its end instead of moving on',
+      () async {
+        await start(buildSongs(3));
+        handler.setSleepAtEndOfTrack();
+
+        await finishTrack();
+
+        expect(played(), [songId(0)]);
+        expect(handler.sleepAtEndOfTrack.value, isFalse);
+        expect(host.playEnds, [(songId(0), true)]);
+      },
+    );
+
+    test('a timed sleep timer cancels "stop after this song"', () async {
+      await start(buildSongs(2));
+      handler.setSleepAtEndOfTrack();
+      await handler.setSleepTimer(const Duration(minutes: 10));
+      expect(handler.sleepAtEndOfTrack.value, isFalse);
+      handler.cancelSleepTimer();
+    });
+
     test('playing a song again counts a listen', () async {
       await start(buildSongs(1));
 
